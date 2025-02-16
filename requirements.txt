@@ -1,0 +1,13 @@
+# AI
+openai==1.63.0
+python-dotenv==1.0.1
+
+#API
+fastapi==0.115.8
+requests==2.32.3
+
+#Web Scraping
+beautifulsoup4==4.13.3
+
+# Database
+psycopg2-binary==2.9.10
