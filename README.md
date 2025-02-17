@@ -18,7 +18,26 @@ Then, navigate into the project directory:
 cd LeetMentor
 ```
 ---
-## 🏗 Step 2: Create a Virtual Environment  
+## 🌲 Step 2: Switch to Your Assigned Branch
+Make sure you’re working in your designated branch:
+- [Jaeyoon Lee](https://github.com/Jaeyoon23) (Database)
+```bash
+git checkout db
+```
+- [Austin Kim](https://github.com/ak3123) (AI)
+```bash
+git checkout ai
+```
+- [Allen Lee]() (API)
+```bash
+git checkout api
+```
+- [(TBD)]() (Frontend)
+```bash
+git checkout front
+```
+---
+## 🏗 Step 3: Create a Virtual Environment  
 Create a new virtual environment named `venv`:
 
 ```bash
@@ -34,12 +53,16 @@ python -m venv venv
   venv\Scripts\activate
   ```
 ---
-## 📦 Step 3: Install Dependencies  
+## 📦 Step 4: Install Dependencies  
 Install all required libraries by running:
 
 ```bash
 pip install -r requirements.txt
 ```
 ---
-
+## 🔄 Additional Git Commands
+To check your current branch:
+```bash
+git branch
+```
 ✅ **You're now ready to begin development in your virtual environment. Good Luck! 😊**
