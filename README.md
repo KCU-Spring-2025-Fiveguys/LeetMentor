@@ -65,4 +65,8 @@ To check your current branch:
 ```bash
 git branch
 ```
+Deactivate the virtual environment:
+```bash
+deactivate
+```
 ✅ **You're now ready to begin development in your virtual environment. Good Luck! 😊**
