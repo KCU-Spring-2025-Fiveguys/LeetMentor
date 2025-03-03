@@ -1,6 +1,7 @@
 #virtual environment
 /venv
-
+#Frontend
+/LeetMentor
 #python cache
 __pycache__/
 *.py[cod]
