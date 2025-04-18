@@ -1,27 +1,15 @@
-from openai import OpenAI
-import os
-from dotenv import load_dotenv
+from fastapi import FastAPI
+from pydantic import BaseModel
+from ai import get_ai_response
 
-load_dotenv()
+app = FastAPI()
 
-client = OpenAI(
-    api_key = os.getenv("OPENAI_API_KEY")
-)
+class CodeSubmission(BaseModel):
+    user_code: str
 
-prompt = """
-Write a bash script that takes a matrix represented as a string with 
-format '[1,2],[3,4],[5,6]' and prints the transpose in the same format.
-"""
+@app.post("/get_hint/{problem_id}/{language}")
+async def execute_code(problem_id: str, language: str, submission: CodeSubmission):
+    result = get_ai_response(submission.user_code, language, problem_id)
+    return {"response": result}
 
-response = client.responses.create(
-    model="o3-mini",
-    reasoning={"effort": "medium"},
-    input=[
-        {
-            "role": "user", 
-            "content": prompt
-        }
-    ]
-)
 
-print(response.output_text)
