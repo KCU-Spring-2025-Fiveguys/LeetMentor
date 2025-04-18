@@ -1,4 +1,4 @@
-// This script extracts the code from a LeetCode problem page when a button is clicked, and displays the extracted code in an overlay.
+// This script extracts the code from a LeetCode problem page when a button is clicked, and sends the code to a server for analysis.
 
 // Function to extract code from the LeetCode Monaco editor
 function extractCode() {
@@ -18,160 +18,155 @@ function extractCode() {
 
 // Function to send extracted code to the local server
 function sendCodeToServer(code) {
-  fetch("http://127.0.0.1:8000/get_hint/1/python", {
+  // Check if code is empty or null
+  if (!code || code.trim() === "") {
+    return Promise.reject(
+      new Error(
+        "Cannot send empty code. Please make sure code is present in the editor."
+      )
+    );
+  }
+
+  console.log("Sending code:", code);
+
+  return fetch("https://leetmentor.vercel.app/get_hint/1/python", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({ user_code: code }),
   })
-    .then((response) => {
+    .then(async (response) => {
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        // Try to get detailed error message
+        const errorText = await response.text();
+        console.error("Error response:", response.status, errorText);
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
       }
       return response.json();
     })
     .then((data) => {
       console.log("Success:", data);
-      alert("Code sent successfully to server!");
+      return data;
     })
     .catch((error) => {
       console.error("Error sending code to server:", error);
-      alert("Failed to send code to server. Check console for details.");
+      throw error; // Re-throw to propagate to the caller
     });
 }
 
-// Function to display extracted code in an overlay
-function displayExtractedCode(code) {
-  // Create overlay container
-  const overlay = document.createElement("div");
-  overlay.className = "leetcode-extractor-overlay";
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 10000;
+// Function to expand the button to show the hint
+function expandButtonWithHint(button, hintText) {
+  // Store original button properties before any changes
+  if (!button.dataset.originalWidth) {
+    button.dataset.originalWidth = button.offsetWidth + "px";
+    button.dataset.originalHeight = button.offsetHeight + "px";
+    button.dataset.originalText = button.textContent;
+    button.dataset.originalPadding = window.getComputedStyle(button).padding;
+  }
+
+  // Capture the current position in the document flow before any changes
+  const rect = button.getBoundingClientRect();
+
+  // Set initial position to absolute to fix the top-left corner
+  button.style.position = "absolute";
+  button.style.top = rect.top + "px";
+  button.style.left = rect.left + "px";
+  button.style.margin = "0";
+  button.style.zIndex = "1000";
+
+  // Create a container for the hint text and close button
+  const hintContainer = document.createElement("div");
+  hintContainer.className = "hint-content";
+  hintContainer.style.cssText = `
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
+    flex-direction: column;
+    width: 100%;
   `;
 
-  // Create content container
-  const container = document.createElement("div");
-  container.className = "leetcode-extractor-container";
-  container.style.cssText = `
-    background-color: white;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 800px;
-    max-height: 80%;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    overflow: auto;
-    position: relative;
-  `;
-
-  // Create header with title and buttons
+  // Create header with close button
   const header = document.createElement("div");
-  header.innerHTML = "<h2>Extracted Code</h2>";
   header.style.cssText = `
-    margin-bottom: 15px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 8px;
+    width: 100%;
   `;
 
-  // Create Close button
-  const closeButton = document.createElement("button");
-  closeButton.textContent = "Close";
-  closeButton.style.cssText = `
-    background-color: #f44336;
+  const title = document.createElement("div");
+  title.textContent = "Hint";
+  title.style.cssText = `
+    font-weight: 600;
+    font-size: 16px;
     color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
   `;
-  closeButton.onclick = () => document.body.removeChild(overlay);
+
+  const closeButton = document.createElement("button");
+  closeButton.innerHTML = "&times;";
+  closeButton.style.cssText = `
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: white;
+    line-height: 1;
+    padding: 0 4px;
+  `;
+
+  // Close button click handler - removes the button entirely
+  closeButton.addEventListener("click", (e) => {
+    e.stopPropagation(); // Prevent triggering the main button click
+    document.body.removeChild(button);
+  });
+
+  header.appendChild(title);
   header.appendChild(closeButton);
 
-  // Create Copy Code button
-  const copyButton = document.createElement("button");
-  copyButton.textContent = "Copy Code";
-  copyButton.style.cssText = `
-    background-color: #4CAF50;
+  // Create content for the hint
+  const content = document.createElement("div");
+  content.textContent = hintText;
+  content.style.cssText = `
+    text-align: left;
+    margin-top: 8px;
+    width: 100%;
+    overflow-wrap: break-word;
+    font-size: 14px;
     color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 10px;
+    line-height: 1.5;
   `;
-  copyButton.onclick = () => {
-    navigator.clipboard.writeText(code).then(() => {
-      copyButton.textContent = "Copied!";
-      setTimeout(() => {
-        copyButton.textContent = "Copy Code";
-      }, 2000);
-    });
-  };
-  header.insertBefore(copyButton, closeButton);
 
-  // Create pre element to show the code
-  const pre = document.createElement("pre");
-  pre.style.cssText = `
-    background-color: #f5f5f5;
-    padding: 15px;
-    border-radius: 4px;
-    overflow: auto;
-    white-space: pre-wrap;
-    font-family: monospace;
-  `;
-  pre.textContent = code;
+  // Assemble the hint container
+  hintContainer.appendChild(header);
+  hintContainer.appendChild(content);
 
-  // Assemble the overlay
-  container.appendChild(header);
-  container.appendChild(pre);
-  overlay.appendChild(container);
-  document.body.appendChild(overlay);
-}
+  // Clear button content and add the hint container
+  button.innerHTML = "";
+  button.appendChild(hintContainer);
 
-// Function to handle manual extraction when the button is clicked
-function handleManualExtraction() {
-  const code = extractCode();
-  if (code) {
-    displayExtractedCode(code);
-  } else {
-    alert(
-      "Failed to extract code. Please ensure you are on a LeetCode problem page."
-    );
-  }
-}
+  // Force browser reflow to ensure proper animation start
+  void button.offsetWidth;
 
-// Function to create and add an extraction button to the page
-function createExtractionButton() {
-  const button = document.createElement("button");
-  button.textContent = "Extract Code";
-  button.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    z-index: 10000;
-  `;
-  button.addEventListener("click", handleManualExtraction);
+  // Take the button out of normal flow to prevent layout shifts
+  const originalParent = button.parentElement;
   document.body.appendChild(button);
+
+  // Apply expanded styles with transition - right and down diagonal expansion
+  button.style.transition =
+    "width 0.8s ease-out, height 0.8s ease-out, padding 0.8s ease-out, background-color 0.8s ease-out, box-shadow 0.8s ease-out";
+  button.style.transformOrigin = "top left"; // Ensure expansion happens from top-left
+  button.style.width = "320px";
+  button.style.height = "auto";
+  button.style.minHeight = "120px";
+  button.style.textAlign = "left";
+  button.style.padding = "12px";
+  button.style.whiteSpace = "normal";
+  button.style.alignItems = "flex-start";
+  button.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.2)";
+  button.style.backgroundColor = "rgb(66, 113, 244)"; // Slightly darker blue
+
+  // Store expanded state
+  button.dataset.expanded = "true";
 }
 
 // Function to add a help button next to "Wrong Answer" results
@@ -188,24 +183,95 @@ function addHelpButton(resultElement) {
 
   // Create the help button
   const helpButton = document.createElement("button");
-  helpButton.textContent = "Need a hint?";
+  helpButton.textContent = "Need a Hint ?";
   helpButton.className = "leetcode-helper-button";
   helpButton.style.cssText = `
-    background-color: #4285F4;
+    background-color: rgb(89, 128, 248);
     color: white;
     border: none;
-    padding: 4px 12px;
-    border-radius: 4px;
-    margin-left: 10px;
+    border-radius: 8px;
+    padding: 6px 16px;
+    margin-left: 16px;
     font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
   `;
+
+  // Add hover effect
+  helpButton.addEventListener("mouseover", () => {
+    if (helpButton.dataset.expanded !== "true") {
+      helpButton.style.backgroundColor = "rgb(66, 113, 244)";
+    }
+  });
+  helpButton.addEventListener("mouseout", () => {
+    if (helpButton.dataset.expanded !== "true") {
+      helpButton.style.backgroundColor = "rgb(89, 128, 248)";
+    }
+  });
 
   // Add click event to the help button
   helpButton.addEventListener("click", () => {
+    // If already expanded, just return
+    if (helpButton.dataset.expanded === "true") return;
+
+    // If loading, also return
+    if (helpButton.disabled) return;
+
+    // Store original text and disable button
+    const originalText = helpButton.textContent;
+    helpButton.textContent = "Loading...";
+    helpButton.disabled = true;
+    helpButton.style.opacity = "0.7";
+    helpButton.style.cursor = "not-allowed";
+
     const code = extractCode();
     if (code) {
-      sendCodeToServer(code);
+      sendCodeToServer(code)
+        .then((data) => {
+          // Re-enable button
+          helpButton.disabled = false;
+          helpButton.style.opacity = "1";
+          helpButton.style.cursor = "pointer";
+
+          // Expand button with hint
+          if (data && data.response) {
+            expandButtonWithHint(helpButton, data.response);
+          } else {
+            expandButtonWithHint(
+              helpButton,
+              "No specific hint available. Your code looks correct!"
+            );
+          }
+        })
+        .catch((error) => {
+          // Re-enable button
+          helpButton.disabled = false;
+          helpButton.style.opacity = "1";
+          helpButton.style.cursor = "pointer";
+
+          // Show error in expanded button
+          expandButtonWithHint(helpButton, `Error: ${error.message}`);
+        });
+    } else {
+      // Re-enable button if code extraction failed
+      helpButton.disabled = false;
+      helpButton.style.opacity = "1";
+      helpButton.style.cursor = "pointer";
+
+      // Show error in expanded button
+      expandButtonWithHint(
+        helpButton,
+        "Failed to extract code. Please ensure code is present in the editor."
+      );
     }
   });
 
@@ -221,26 +287,19 @@ function monitorResults() {
   // Check for existing result elements immediately
   checkForResultElements();
 
+  // Create a more aggressive mutation observer that checks more frequently
   const observer = new MutationObserver((mutations) => {
-    let hasRelevantChanges = false;
-
-    for (const mutation of mutations) {
-      if (mutation.type === "childList" || mutation.type === "characterData") {
-        hasRelevantChanges = true;
-        break;
-      }
-    }
-
-    if (hasRelevantChanges) {
-      checkForResultElements();
-    }
+    // Always check for result elements on any DOM change
+    checkForResultElements();
   });
 
-  // Start observing the entire document for changes
+  // Start observing the entire document for changes with more complete options
   observer.observe(document.body, {
     childList: true,
     subtree: true,
     characterData: true,
+    attributes: true, // Also watch for attribute changes
+    attributeFilter: ["class", "data-e2e-locator"], // Filter to relevant attributes
   });
 }
 
@@ -251,8 +310,11 @@ function checkForResultElements() {
     '[data-e2e-locator="console-result"]',
     ".text-xl.font-medium.text-red-s",
     ".text-red-s",
-    '.text-xl:contains("Wrong Answer")',
     'div:contains("Wrong Answer")',
+    // Add more specific selectors based on leetcode's UI
+    '[data-e2e-status="not-accepted"]',
+    ".not-accepted",
+    '[data-cy="submit-result"]',
   ];
 
   let resultElements = [];
@@ -292,21 +354,30 @@ function checkForResultElements() {
     const text = element.textContent.trim();
     console.log("Found result element:", text);
 
-    if (text === "Wrong Answer") {
+    // Check if a button is already present as a next sibling
+    const nextSibling = element.nextElementSibling;
+    if (
+      nextSibling &&
+      nextSibling.classList.contains("leetcode-helper-button")
+    ) {
+      console.log("Button already exists, skipping:", element);
+      return;
+    }
+
+    if (text === "Wrong Answer" || text.includes("Wrong Answer")) {
       addHelpButton(element);
+      console.log("Added new help button for:", element);
     }
   });
 }
 
-// Initialize the extraction button and result monitoring right away
-createExtractionButton();
+// Initialize result monitoring right away
 monitorResults();
 
 // Also initialize on DOMContentLoaded for safety
 window.addEventListener("DOMContentLoaded", () => {
   // Double-check that our monitoring is active
   if (!document.querySelector(".leetcode-helper-button")) {
-    createExtractionButton();
     monitorResults();
   }
 });
@@ -316,11 +387,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "extractCode") {
     const code = extractCode();
     if (code) {
-      sendCodeToServer(code);
-      sendResponse({ status: "success" });
+      sendCodeToServer(code)
+        .then(() => {
+          sendResponse({ status: "success" });
+        })
+        .catch(() => {
+          sendResponse({ status: "error" });
+        });
+      return true; // Indicate we'll respond asynchronously
     } else {
       sendResponse({ status: "error" });
+      return true;
     }
-    return true;
   }
 });
