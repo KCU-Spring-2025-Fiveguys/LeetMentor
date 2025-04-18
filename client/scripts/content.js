@@ -163,7 +163,7 @@ function addHelpButton(resultElement) {
 
   // Create the help button
   const helpButton = document.createElement("button");
-  helpButton.textContent = "Fix My Code";
+  helpButton.textContent = "Need a hint?";
   helpButton.className = "leetcode-helper-button";
   helpButton.style.cssText = `
     background-color: #4285F4;
