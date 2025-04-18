@@ -39,3 +39,8 @@ ENV/
 
 #os files
 .DS_Store
+
+# Firebase
+*-firebase-adminsdk-*.json
+*firebase*.json
+*serviceAccount*.json
