@@ -16,6 +16,31 @@ function extractCode() {
   return codeLines.join("\n");
 }
 
+// Function to send extracted code to the local server
+function sendCodeToServer(code) {
+  fetch("http://127.0.0.1:8000/get_hint/1/python", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ code }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Success:", data);
+      alert("Code sent successfully to server!");
+    })
+    .catch((error) => {
+      console.error("Error sending code to server:", error);
+      alert("Failed to send code to server. Check console for details.");
+    });
+}
+
 // Function to display extracted code in an overlay
 function displayExtractedCode(code) {
   // Create overlay container
@@ -180,7 +205,7 @@ function addHelpButton(resultElement) {
   helpButton.addEventListener("click", () => {
     const code = extractCode();
     if (code) {
-      displayExtractedCode(code);
+      sendCodeToServer(code);
     }
   });
 
@@ -291,7 +316,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "extractCode") {
     const code = extractCode();
     if (code) {
-      displayExtractedCode(code);
+      sendCodeToServer(code);
       sendResponse({ status: "success" });
     } else {
       sendResponse({ status: "error" });
