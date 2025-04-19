@@ -8,6 +8,6 @@ __pycache__/
 
 #os files
 .DS_Store
-
+leetmento-firebase-adminsdk-fbsvc-649dd73681.json
 #environment variables
 .env
