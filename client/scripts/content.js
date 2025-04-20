@@ -15,17 +15,21 @@ function extractProblemId() {
 
 // Function to extract the language from the LeetCode Monaco editor
 function extractLanguage() {
+  // Find the language button based on the more specific class structure from the HTML
+  // Target the first button in the flex container that contains the language selection
   const languageButton = document.querySelector(
-    'button[aria-haspopup="dialog"]'
+    ".rounded.items-center.whitespace-nowrap.focus\\:outline-none.inline-flex.bg-transparent.dark\\:bg-dark-transparent.text-text-secondary.dark\\:text-text-secondary.active\\:bg-transparent.dark\\:active\\:bg-dark-transparent.hover\\:bg-fill-secondary.dark\\:hover\\:bg-fill-secondary.px-1\\.5.py-0\\.5.text-sm.font-normal.group"
   );
   if (!languageButton) {
     return null;
   }
-  // Get the first button's text content and remove any extra whitespace
-  const buttonText = languageButton.querySelector("button").textContent.trim();
-  // Extract just the language name by removing the dropdown arrow text
-  const language = buttonText.replace(/\s*chevron-down\s*$/, "").toLowerCase();
-  return language;
+
+  // Extract the text content before the chevron icon
+  // The language is the text content before the div that contains the chevron
+  const buttonText = languageButton.childNodes[0].textContent.trim();
+
+  // Return the language name as is (not lowercased) to preserve proper format like "Python3"
+  return buttonText;
 }
 
 // Function to extract code from the LeetCode Monaco editor
@@ -55,6 +59,8 @@ function sendCodeToServer(code, language, problem_id) {
   }
 
   console.log("Sending code:", code);
+  console.log("Language:", language);
+  console.log("Problem ID:", problem_id);
 
   return fetch("https://leetmentor.vercel.app/get_hint", {
     method: "POST",
