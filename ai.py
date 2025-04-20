@@ -8,7 +8,7 @@ client = OpenAI(
     api_key = os.getenv("OPENAI_API_KEY")
 )
 
-def get_ai_response(user_code, language, problem_id):
+def get_ai_hint(user_code, language, problem_id):
     problem = get_problem_by_id(problem_id)
     prompt = f"""
     You are an AI mentor whose sole purpose is to verify that submitted code runs without errors and that its logic is sound.
@@ -28,7 +28,7 @@ def get_ai_response(user_code, language, problem_id):
     
     Do NOT suggest performance or style changes—focus only on helping them arrive at a correct, error-free program.
     
-    If the code appears logically correct, simply respond with "Looks good to me! 😊"
+    If the code appears logically correct, simply respond with "Looks good to me!"
 
     Format your response as just the hint itself, without any other text.
     Example hints:
@@ -50,5 +50,37 @@ def get_ai_response(user_code, language, problem_id):
 
     return response.output_text
 
+def get_ai_improvement(user_code, language, problem_id):
+    problem = get_problem_by_id(problem_id)
+    prompt = f"""
+    // TODO: Implement this
+    """
+    response = client.responses.create(
+    model="o4-mini",
+    reasoning={"effort": "medium"},
+    input=[
+        {
+            "role": "user", 
+            "content": prompt
+        }
+    ]
+    )
+    return response.output_text
 
 
+def get_ai_follow_up(problem_id):
+    problem = get_problem_by_id(problem_id)
+    prompt = f"""
+    // TODO: Implement this
+    """
+    response = client.responses.create(
+    model="o4-mini",
+    reasoning={"effort": "medium"},
+    input=[
+        {
+            "role": "user", 
+            "content": prompt
+        }
+    ]
+    )
+    return response.output_text
