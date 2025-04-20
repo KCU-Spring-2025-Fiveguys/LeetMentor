@@ -1,5 +1,33 @@
 // This script extracts the code from a LeetCode problem page when a button is clicked, and sends the code to a server for analysis.
 
+// Function to extract the problem id from the LeetCode problem page
+function extractProblemId() {
+  const problemElement = document.querySelector(".text-title-large a");
+  if (!problemElement) {
+    return null;
+  }
+  const match = problemElement.textContent.match(/^(\d+)\./);
+  if (!match) {
+    return null;
+  }
+  return match[1];
+}
+
+// Function to extract the language from the LeetCode Monaco editor
+function extractLanguage() {
+  const languageButton = document.querySelector(
+    'button[aria-haspopup="dialog"]'
+  );
+  if (!languageButton) {
+    return null;
+  }
+  // Get the first button's text content and remove any extra whitespace
+  const buttonText = languageButton.querySelector("button").textContent.trim();
+  // Extract just the language name by removing the dropdown arrow text
+  const language = buttonText.replace(/\s*chevron-down\s*$/, "").toLowerCase();
+  return language;
+}
+
 // Function to extract code from the LeetCode Monaco editor
 function extractCode() {
   const linesContainer = document.querySelector(
@@ -8,7 +36,6 @@ function extractCode() {
   if (!linesContainer) {
     return null;
   }
-
   const lineElements = linesContainer.querySelectorAll(".view-line");
   const codeLines = Array.from(lineElements).map(
     (line) => line.textContent || ""
@@ -17,7 +44,7 @@ function extractCode() {
 }
 
 // Function to send extracted code to the local server
-function sendCodeToServer(code) {
+function sendCodeToServer(code, language, problem_id) {
   // Check if code is empty or null
   if (!code || code.trim() === "") {
     return Promise.reject(
@@ -29,12 +56,16 @@ function sendCodeToServer(code) {
 
   console.log("Sending code:", code);
 
-  return fetch("https://leetmentor.vercel.app/get_hint/1/python", {
+  return fetch("https://leetmentor.vercel.app/get_hint", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ user_code: code }),
+    body: JSON.stringify({
+      user_code: code,
+      language: language,
+      problem_id: problem_id,
+    }),
   })
     .then(async (response) => {
       if (!response.ok) {
@@ -234,8 +265,10 @@ function addHelpButton(resultElement) {
     helpButton.style.cursor = "not-allowed";
 
     const code = extractCode();
+    const language = extractLanguage();
+    const problem_id = extractProblemId();
     if (code) {
-      sendCodeToServer(code)
+      sendCodeToServer(code, language, problem_id)
         .then((data) => {
           // Re-enable button
           helpButton.disabled = false;
@@ -386,8 +419,10 @@ window.addEventListener("DOMContentLoaded", () => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "extractCode") {
     const code = extractCode();
+    const language = extractLanguage();
+    const problem_id = extractProblemId();
     if (code) {
-      sendCodeToServer(code)
+      sendCodeToServer(code, language, problem_id)
         .then(() => {
           sendResponse({ status: "success" });
         })
