@@ -18,13 +18,16 @@ class CodeSubmission(BaseModel):
     language: str
     user_code: str
 
+class FollowUpSubmission(BaseModel):
+    problem_id: str
+
 @app.post("/get_hint")
 async def execute_code(submission: CodeSubmission):
     result = get_ai_hint(submission.user_code, submission.language, submission.problem_id)
     return {"response": result}
 
 @app.post("/get_follow_up")
-async def execute_code(submission: CodeSubmission):
+async def execute_code(submission: FollowUpSubmission):
     result = get_ai_follow_up(submission.problem_id)
     return {"response": result}
 

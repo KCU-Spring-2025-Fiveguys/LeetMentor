@@ -62,21 +62,22 @@ def get_ai_improvement(user_code, language, problem_id):
     Focus ONLY on:
     1. Calculate its current time complexity in Big-O notation.
     2. If the complexity can be improved, suggest one concrete way to evolve or improve it.
-    Format your response as just the hint itself, without any other text.
-
-    When you spot a problem:
+    
+    When you spot a potential improvement:
     - Don't hand over the solution
-    - Offer a gentle, open-ended hint that nudges the learner toward discovering the fix themselves
+    - Offer a gentle, open-ended hint that nudges the learner toward discovering the improvement themselves
     - Be specific enough to guide them but vague enough to make them think
+    
+    Do NOT suggest style changes—focus only on calculating and (if applicable) improving the time complexity.
+    
+    If the code already has optimal time complexity, simply respond with "Looks good to me!"
 
-
+    Format your response as just the hint itself, without any other text.
     Example hints:
-    - current time complexity is O(n²)
-    - you can improve complexity by using a hash map for O(1) lookups
-
-    Do NOT suggest performance or style changes—focus only on calculating and (if applicable) improving the complexity.
-    If the code appear already optimal, simply respond with "Looks good to me! 😊"
+    - "Your current time complexity is O(n²). Consider how you might use a hash map for O(1) lookups instead of nested loops."
+    - "I notice your algorithm runs in O(n log n) time. Think about whether you need to sort the entire array or if there's a linear time approach."
     """
+
     response = client.responses.create(
         model="o4-mini",
         reasoning={"effort": "medium"},
@@ -87,39 +88,34 @@ def get_ai_improvement(user_code, language, problem_id):
             }
         ]
     )
+
     return response.output_text
 
 
 def get_ai_follow_up(problem_id):
     problem = get_problem_by_id(problem_id)
     prompt = f"""
-    You are an AI coding problem mentor whose sole purpose is to generate a single follow-up question for a given coding problem and then validate a user's solution to that follow-up question.:
+    You are an AI coding interview coach whose purpose is to generate a realistic follow-up question that an interviewer might ask.
+    The original problem is:
     {problem}
 
+    Your task is to:
+    1. Create one follow-up question that a real interviewer would likely ask after the candidate solves the original problem.
+    2. The follow-up should either:
+       - Explore edge cases or optimizations of the original solution
+       - Extend the problem with a new constraint or requirement
+       - Ask about a related but more challenging variation
+    3. Make the follow-up question conversational and interview-like.
     
-If the input includes only a problem title and description, output exactly one follow-up question (just the question text), with no additional commentary.
-If the input includes a follow-up question and a user's proposed solution (code or description), output only one line:
-• "Correct! 😊" if the solution is correct for standard test cases.
-• Otherwise, "Incorrect. <concise hint>" where <concise hint> points to the error.
-
-    I will give you the title and description of a coding problem. Your task is to:
+    The follow-up should feel natural, as if continuing the interview discussion. It should challenge the candidate to think deeper about the problem space.
     
-Produce one follow-up question that builds on the original problem, exploring a more advanced or broader concept but within the same domain.
- 
- Do NOT provide full solutions or explanations. Do NOT include any other text.
+    Output only the follow-up question without additional commentary or solutions.
 
-    Example 1:
+    Example:
     Input:
     Problem: Two Sum - Given an array of integers and a target, return indices of the two numbers that add up to the target.
     Output:
-    Three Sum
-
-    Example 2:
-    Input:
-    Follow-up: Three Sum - Given an array of integers, return all unique triplets that sum to zero.
-    User Solution: [user's code]
-    Output:
-    Correct! 😊
+    What if the input array is already sorted? How would you modify your approach to optimize for this case?
     """
     response = client.responses.create(
         model="o4-mini",
