@@ -493,6 +493,183 @@ function addAcceptedButton(resultElement) {
   return acceptedButton;
 }
 
+/**
+ * Create and add a UI panel below the "Accepted" result and above the Code section
+ * @param {HTMLElement} resultElement - The result element to add the panel below
+ */
+function addAcceptedPanel(resultElement) {
+  // Check if panel already exists
+  const existingPanel = document.querySelector(".leetcode-solution-panel");
+  if (existingPanel) {
+    return;
+  }
+
+  // Look for the flex container with the Code section - using the exact class structure in the UI
+  const codeSection = document.querySelector(
+    "div.flex.flex-col > div.flex.items-center.justify-between.pb-2 > div.flex.items-center.gap-2 > div.bg-divider-2"
+  );
+
+  if (!codeSection) {
+    console.error("Could not find Code section with divider element");
+    return;
+  }
+
+  // Navigate up to the main flex container that holds the code section
+  const codeContainer = codeSection.closest(".flex.flex-col");
+
+  if (!codeContainer) {
+    console.error("Could not find Code section container");
+    return;
+  }
+
+  // Get the parent container that will hold our panel
+  const parentContainer = codeContainer.parentNode;
+  if (!parentContainer) {
+    console.error("Cannot find parent container for Code section");
+    return;
+  }
+
+  // Create the panel container with prominent styling
+  const panel = document.createElement("div");
+  panel.className = "leetcode-solution-panel";
+  panel.style.cssText = `
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin: 0 0 16px 0;
+    padding: 16px;
+    background-color: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 120px;
+    display: block !important;
+    position: relative;
+    z-index: 5;
+    opacity: 1;
+    visibility: visible;
+  `;
+
+  // Use dark mode styling if needed
+  if (
+    document.body.classList.contains("dark") ||
+    document.documentElement.classList.contains("dark") ||
+    document.querySelector('html[data-theme="dark"]')
+  ) {
+    panel.style.backgroundColor = "#262626";
+    panel.style.border = "1px solid rgba(255, 255, 255, 0.1)";
+  }
+
+  // Initial panel header
+  panel.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <div style="font-weight: 600; font-size: 16px; color: #3182ce;">Follow-up Question</div>
+    </div>
+    <div id="panel-content" style="min-height: 80px; width: 100%;"></div>
+  `;
+
+  // Insert the panel directly before the Code section
+  parentContainer.insertBefore(panel, codeContainer);
+
+  // Create content container for easier updates
+  const contentContainer = panel.querySelector("#panel-content");
+
+  // Show loading spinner using LeetCode styles
+  function showLoadingState() {
+    contentContainer.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; width: 100%;">
+        <div class="animate-spin" style="height: 24px; width: 24px; border-radius: 50%; border: 3px solid rgba(0, 0, 0, 0.1); border-top-color: #3182ce; margin-bottom: 12px;"></div>
+        <div style="color: #666; font-size: 14px;">Loading follow-up question...</div>
+      </div>
+    `;
+
+    // Adjust spinner color for dark mode
+    if (
+      document.body.classList.contains("dark") ||
+      document.documentElement.classList.contains("dark") ||
+      document.querySelector('html[data-theme="dark"]')
+    ) {
+      const spinner = contentContainer.querySelector(".animate-spin");
+      if (spinner) {
+        spinner.style.borderColor = "rgba(255, 255, 255, 0.1)";
+        spinner.style.borderTopColor = "#3182ce";
+      }
+    }
+  }
+
+  // Show error message
+  function showError(message) {
+    contentContainer.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: #e53e3e; border: 1px dashed #e53e3e; border-radius: 4px;">
+        <div style="font-weight: 500; margin-bottom: 8px;">Error</div>
+        <div>${
+          message ||
+          "Failed to load follow-up question. Please try again later."
+        }</div>
+      </div>
+    `;
+  }
+
+  // Display follow-up question
+  function showFollowUpQuestion(questionText) {
+    contentContainer.innerHTML = `
+      <div style="padding: 12px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 4px; background-color: rgba(0, 0, 0, 0.02);">
+        <div style="line-height: 1.6; font-size: 14px;">${questionText}</div>
+      </div>
+    `;
+
+    // Adjust styling for dark mode
+    if (
+      document.body.classList.contains("dark") ||
+      document.documentElement.classList.contains("dark") ||
+      document.querySelector('html[data-theme="dark"]')
+    ) {
+      const questionContainer = contentContainer.querySelector("div");
+      if (questionContainer) {
+        questionContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+        questionContainer.style.borderColor = "rgba(255, 255, 255, 0.1)";
+      }
+    }
+  }
+
+  // Fetch follow-up question immediately after panel insertion
+  function fetchFollowUpQuestion() {
+    const problem_id = extractProblemId();
+    if (!problem_id) {
+      showError("Could not determine the problem ID");
+      return;
+    }
+
+    // Show loading indicator
+    showLoadingState();
+
+    // Fetch the follow-up question
+    sendToServerFollowUp(problem_id)
+      .then((data) => {
+        if (data && data.response) {
+          showFollowUpQuestion(data.response);
+        } else {
+          showError("Received empty response from server");
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching follow-up question:", error);
+        showError(error.message);
+      });
+  }
+
+  // Start fetching the follow-up question
+  fetchFollowUpQuestion();
+
+  // Force browser reflow for visibility
+  void panel.offsetWidth;
+
+  console.log(
+    "Solution panel added above Code section with follow-up question loading"
+  );
+
+  return panel;
+}
+
 // =============== DOM OBSERVER FUNCTIONS ===============
 /**
  * Check for result elements in the DOM that indicate Wrong Answer status
@@ -587,12 +764,14 @@ function checkForAcceptedElements() {
         nextSibling.classList.contains("leetcode-accepted-button")
       ) {
         console.log("Accepted button already exists, skipping:", element);
-        return;
+      } else {
+        // Add the accepted button
+        addAcceptedButton(element);
+        console.log("Added new accepted button for:", element);
       }
 
-      // Add the accepted button
-      addAcceptedButton(element);
-      console.log("Added new accepted button for:", element);
+      // Add the solution panel
+      addAcceptedPanel(element);
     }
   });
 }
