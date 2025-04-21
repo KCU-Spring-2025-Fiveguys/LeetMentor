@@ -1,15 +1,15 @@
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
-from db import get_problem_by_id
+from db import get_problem_by_name
 load_dotenv()
 
 client = OpenAI(
     api_key = os.getenv("OPENAI_API_KEY")
 )
 
-def get_ai_hint(user_code, language, problem_id):
-    problem = get_problem_by_id(problem_id)
+def get_ai_hint(user_code, language, problem_name):
+    problem = get_problem_by_name(problem_name)
     prompt = f"""
     You are an AI mentor whose sole purpose is to verify that submitted code runs without errors and that its logic is sound.
     The problem is as follows:
@@ -50,8 +50,8 @@ def get_ai_hint(user_code, language, problem_id):
 
     return response.output_text
 
-def get_ai_improvement(user_code, language, problem_id):
-    problem = get_problem_by_id(problem_id)
+def get_ai_improvement(user_code, language, problem_name):
+    problem = get_problem_by_name(problem_name)
     prompt = f"""
     You are an AI complexity improvement mentor whose sole purpose is to calculate the time complexity of a given code snippet and suggest exactly one way to improve it if possible.
     The problem is as follows:
@@ -92,8 +92,8 @@ def get_ai_improvement(user_code, language, problem_id):
     return response.output_text
 
 
-def get_ai_follow_up(problem_id):
-    problem = get_problem_by_id(problem_id)
+def get_ai_follow_up(problem_name):
+    problem = get_problem_by_name(problem_name)
     prompt = f"""
     You are an AI coding interview coach whose purpose is to generate a realistic follow-up question that an interviewer might ask.
     The original problem is:

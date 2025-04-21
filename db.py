@@ -12,13 +12,12 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 db = firestore.client()
     
-def get_problem_by_id(id):
-    problem_ref = db.collection('problems').document(id)
-    problem = problem_ref.get()
-    if problem.exists:
-        problem_data = problem.to_dict()
-        instruction = problem_data.get('instruction', '')
-        raw_examples = problem_data.get('examples', [])
+def get_problem_by_name(name):
+    problem_ref = db.collection('problems').where('name', '==', name).get()
+    if problem_ref:
+        problem = problem_ref[0].to_dict()
+        instruction = problem.get('instruction', '')
+        raw_examples = problem.get('examples', [])
         
         # Format examples
         formatted_examples = []
@@ -94,5 +93,5 @@ def get_problem_by_id(id):
 
 # Only run this test code when the file is executed directly, not when imported
 if __name__ == "__main__":
-    result = get_problem_by_id('1')
+    result = get_problem_by_name('Two Sum')
     print(result)
