@@ -3,19 +3,19 @@
 
 // =============== EXTRACTION FUNCTIONS ===============
 /**
- * Extract the problem ID from the LeetCode problem page
- * @returns {string|null} - The problem ID or null if not found
+ * Extract the problem Name from the LeetCode problem page
+ * @returns {string|null} - The problem Name or null if not found
  */
-function extractProblemId() {
-  const problemElement = document.querySelector(".text-title-large a");
-  if (!problemElement) {
-    return null;
+function extractProblemName() {
+  // Try to get the problem name from the title element
+  const titleElement = document.querySelector("title");
+  if (titleElement) {
+    const titleText = titleElement.textContent;
+    const match = titleText.match(/^(.*?)\s-\sLeetCode$/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
   }
-  const match = problemElement.textContent.match(/^(\d+)\./);
-  if (!match) {
-    return null;
-  }
-  return match[1];
 }
 
 /**
@@ -63,10 +63,10 @@ function extractCode() {
  * Send extracted code to the remote server for hint generation
  * @param {string} code - The extracted code from the editor
  * @param {string} language - The programming language used
- * @param {string} problem_id - The LeetCode problem ID
+ * @param {string} problem_name - The LeetCode problem name
  * @returns {Promise} - Promise that resolves with the server response
  */
-function sendToServerHint(code, language, problem_id) {
+function sendToServerHint(code, language, problem_name) {
   // Check if code is empty or null
   if (!code || code.trim() === "") {
     return Promise.reject(
@@ -78,7 +78,7 @@ function sendToServerHint(code, language, problem_id) {
 
   console.log("Sending code:", code);
   console.log("Language:", language);
-  console.log("Problem ID:", problem_id);
+  console.log("Problem name:", problem_name);
 
   return fetch("https://leetmentor.vercel.app/get_hint", {
     method: "POST",
@@ -88,7 +88,7 @@ function sendToServerHint(code, language, problem_id) {
     body: JSON.stringify({
       user_code: code,
       language: language,
-      problem_id: problem_id,
+      problem_name: problem_name,
     }),
   })
     .then(async (response) => {
@@ -114,10 +114,10 @@ function sendToServerHint(code, language, problem_id) {
  * Send extracted code to the remote server for improvement generation
  * @param {string} code - The extracted code from the editor
  * @param {string} language - The programming language used
- * @param {string} problem_id - The LeetCode problem ID
+ * @param {string} problem_name - The LeetCode problem name
  * @returns {Promise} - Promise that resolves with the server response
  */
-function sendToServerImprovement(code, language, problem_id) {
+function sendToServerImprovement(code, language, problem_name) {
   // Check if code is empty or null
   if (!code || code.trim() === "") {
     return Promise.reject(
@@ -129,7 +129,7 @@ function sendToServerImprovement(code, language, problem_id) {
 
   console.log("Sending code:", code);
   console.log("Language:", language);
-  console.log("Problem ID:", problem_id);
+  console.log("Problem name:", problem_name);
 
   return fetch("https://leetmentor.vercel.app/get_improvement", {
     method: "POST",
@@ -139,7 +139,7 @@ function sendToServerImprovement(code, language, problem_id) {
     body: JSON.stringify({
       user_code: code,
       language: language,
-      problem_id: problem_id,
+      problem_name: problem_name,
     }),
   })
     .then(async (response) => {
@@ -162,13 +162,13 @@ function sendToServerImprovement(code, language, problem_id) {
 }
 
 /**
- * Send the problem ID to the remote server for follow-up question generation
- * @param {string} problem_id - The LeetCode problem ID
+ * Send the problem name to the remote server for follow-up question generation
+ * @param {string} problem_name - The LeetCode problem name
  * @returns {Promise} - Promise that resolves with the server response
  */
-function sendToServerFollowUp(problem_id) {
+function sendToServerFollowUp(problem_name) {
   // Check if code is empty or null
-  console.log("Problem ID:", problem_id);
+  console.log("Problem name:", problem_name);
 
   return fetch("https://leetmentor.vercel.app/get_follow_up", {
     method: "POST",
@@ -176,7 +176,7 @@ function sendToServerFollowUp(problem_id) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      problem_id: problem_id,
+      problem_name: problem_name,
     }),
   })
     .then(async (response) => {
@@ -633,9 +633,9 @@ function addAcceptedPanel(resultElement) {
 
   // Fetch follow-up question immediately after panel insertion
   function fetchFollowUpQuestion() {
-    const problem_id = extractProblemId();
-    if (!problem_id) {
-      showError("Could not determine the problem ID");
+    const problem_name = extractProblemName();
+    if (!problem_name) {
+      showError("Could not determine the problem name");
       return;
     }
 
@@ -643,7 +643,7 @@ function addAcceptedPanel(resultElement) {
     showLoadingState();
 
     // Fetch the follow-up question
-    sendToServerFollowUp(problem_id)
+    sendToServerFollowUp(problem_name)
       .then((data) => {
         if (data && data.response) {
           showFollowUpQuestion(data.response);
@@ -818,10 +818,10 @@ function handleHintButtonClick(helpButton) {
 
   const code = extractCode();
   const language = extractLanguage();
-  const problem_id = extractProblemId();
+  const problem_name = extractProblemName();
 
   if (code) {
-    sendToServerHint(code, language, problem_id)
+    sendToServerHint(code, language, problem_name)
       .then((data) => {
         // Re-enable button
         helpButton.disabled = false;
@@ -882,9 +882,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "extractCode") {
     const code = extractCode();
     const language = extractLanguage();
-    const problem_id = extractProblemId();
+    const problem_name = extractProblemName();
     if (code) {
-      sendToServerHint(code, language, problem_id)
+      sendToServerHint(code, language, problem_name)
         .then(() => {
           sendResponse({ status: "success" });
         })
@@ -910,10 +910,10 @@ function handleImprovementButtonClick(button) {
 
   const code = extractCode();
   const language = extractLanguage();
-  const problem_id = extractProblemId();
+  const problem_name = extractProblemName();
 
   if (code) {
-    sendToServerImprovement(code, language, problem_id)
+    sendToServerImprovement(code, language, problem_name)
       .then((data) => {
         // Re-enable button
         button.disabled = false;

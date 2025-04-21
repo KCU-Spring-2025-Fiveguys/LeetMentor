@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LeetCode Code Extractor",
+  "name": "LeetMentor",
   "version": "1.0",
-  "description": "Extract code from LeetCode editor and monitor execution results",
+  "description": "Get hints, follow-ups and improvements for LeetCode problems",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": ["https://leetcode.com/*"],
   "action": {
