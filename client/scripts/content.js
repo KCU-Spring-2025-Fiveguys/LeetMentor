@@ -413,7 +413,7 @@ function addAcceptedButton(resultElement) {
   acceptedButton.textContent = "Optimize My Solution";
   acceptedButton.className = "leetcode-accepted-button";
   acceptedButton.style.cssText = `
-    background-color: #FFA116;
+    background-color: #FFB346;
     color: white;
     border: none;
     border-radius: 4px;
@@ -457,16 +457,16 @@ function addAcceptedButton(resultElement) {
   acceptedButton.textContent = ""; // Clear default text
   acceptedButton.appendChild(buttonContent);
 
-  // Add hover effect
+  // Add hover effect - reversing the colors so it gets darker on hover
   acceptedButton.addEventListener("mouseover", () => {
     if (acceptedButton.dataset.expanded !== "true") {
-      acceptedButton.style.backgroundColor = "#FFB346"; // Lighter orange
+      acceptedButton.style.backgroundColor = "#FFA116"; // Darker orange
       acceptedButton.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
     }
   });
   acceptedButton.addEventListener("mouseout", () => {
     if (acceptedButton.dataset.expanded !== "true") {
-      acceptedButton.style.backgroundColor = "#FFA116";
+      acceptedButton.style.backgroundColor = "#FFB346"; // Lighter orange
       acceptedButton.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
     }
   });
@@ -669,6 +669,81 @@ function addAcceptedPanel(resultElement) {
   return panel;
 }
 
+/**
+ * Create and add a "Save Feedback" button next to the submission timestamp
+ * @param {HTMLElement} submissionInfoContainer - The container with the submission timestamp
+ */
+function addSaveFeedbackButton(submissionInfoContainer) {
+  // Check if button already exists
+  if (submissionInfoContainer.querySelector(".leetcode-save-feedback-button")) {
+    return;
+  }
+
+  // Create the save feedback button
+  const saveFeedbackButton = document.createElement("button");
+  saveFeedbackButton.className = "leetcode-save-feedback-button";
+  saveFeedbackButton.style.cssText = `
+    background-color: #9F7AEA;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0 12px;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  `;
+
+  // Add icon to the button
+  const buttonContent = document.createElement("span");
+  buttonContent.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  `;
+
+  const icon = document.createElement("span");
+  icon.textContent = "💾";
+  icon.style.cssText = `
+    font-size: 14px;
+    line-height: 1;
+  `;
+
+  const text = document.createElement("span");
+  text.textContent = "Save Feedback";
+
+  // Assemble button content
+  buttonContent.appendChild(icon);
+  buttonContent.appendChild(text);
+  saveFeedbackButton.textContent = ""; // Clear default text
+  saveFeedbackButton.appendChild(buttonContent);
+
+  // Add hover effect - darken by ~10% instead of lightening
+  saveFeedbackButton.addEventListener("mouseover", () => {
+    saveFeedbackButton.style.backgroundColor = "#805AD5"; // Darker purple (~10% darker)
+    saveFeedbackButton.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
+  });
+  saveFeedbackButton.addEventListener("mouseout", () => {
+    saveFeedbackButton.style.backgroundColor = "#9F7AEA";
+    saveFeedbackButton.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
+  });
+
+  // Add the button to the submission info container
+  submissionInfoContainer.appendChild(saveFeedbackButton);
+  console.log("Save Feedback button added to:", submissionInfoContainer);
+
+  return saveFeedbackButton;
+}
+
 // =============== DOM OBSERVER FUNCTIONS ===============
 /**
  * Check for result elements in the DOM that indicate Wrong Answer status
@@ -771,6 +846,22 @@ function checkForAcceptedElements() {
 
       // Add the solution panel
       addAcceptedPanel(element);
+
+      // Find the submission timestamp container and add the Save Feedback button
+      // Look for the container with "submitted at" text which is in the second div
+      const resultContainer = element.closest(
+        ".flex.flex-1.flex-col.items-start.gap-1.overflow-hidden"
+      );
+      if (resultContainer) {
+        // Find the submission info container - second inner div with timestamp
+        const submissionInfoContainer = resultContainer.querySelector(
+          ".flex.max-w-full.flex-1.items-center.gap-1.overflow-hidden.text-xs"
+        );
+        if (submissionInfoContainer) {
+          // Add the Save Feedback button
+          addSaveFeedbackButton(submissionInfoContainer);
+        }
+      }
     }
   });
 }
