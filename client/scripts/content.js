@@ -102,6 +102,12 @@ function sendToServerHint(code, language, problem_name) {
     })
     .then((data) => {
       console.log("Success:", data);
+
+      // Save the hint response to storage
+      if (data && data.response && problem_name) {
+        saveFeedbackDraft(problem_name, data.response);
+      }
+
       return data;
     })
     .catch((error) => {
@@ -153,12 +159,52 @@ function sendToServerImprovement(code, language, problem_name) {
     })
     .then((data) => {
       console.log("Success:", data);
+
+      // Save the improvement response to storage
+      if (data && data.response && problem_name) {
+        saveFeedbackDraft(problem_name, data.response);
+      }
+
       return data;
     })
     .catch((error) => {
       console.error("Error sending code to server:", error);
       throw error; // Re-throw to propagate to the caller
     });
+}
+
+/**
+ * Saves feedback response to the feedbackDrafts in chrome.storage.local
+ * @param {string} problemName - The LeetCode problem name
+ * @param {string} feedbackText - The feedback text to save
+ */
+function saveFeedbackDraft(problemName, feedbackText) {
+  if (!problemName || !feedbackText) {
+    console.error("Missing problemName or feedbackText for draft saving");
+    return;
+  }
+
+  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+    // Get existing drafts
+    chrome.storage.local.get(["feedbackDrafts"], function (result) {
+      const feedbackDrafts = result.feedbackDrafts || {};
+
+      // Append new feedback or create new entry
+      if (feedbackDrafts[problemName]) {
+        feedbackDrafts[problemName] += "\n" + feedbackText;
+      } else {
+        feedbackDrafts[problemName] = feedbackText;
+      }
+
+      // Add timestamp for cleanup purposes
+      feedbackDrafts[`${problemName}_timestamp`] = Date.now();
+
+      // Save back to storage
+      chrome.storage.local.set({ feedbackDrafts: feedbackDrafts }, function () {
+        console.log(`Saved feedback draft for ${problemName}`);
+      });
+    });
+  }
 }
 
 /**
@@ -200,11 +246,17 @@ function sendToServerFollowUp(problem_name) {
 
 /**
  * Send the problem name to the remote server for follow-up question generation
+ * @param {string} problemName - The name of the LeetCode problem
  * @param {string} feedback - The feedback from the user
  * @returns {Promise} - Promise that resolves with the server response
  */
-function sendToServerFeedbackSummary(feedback) {
-  // Check if code is empty or null
+function sendToServerFeedbackSummary(problemName, feedback) {
+  // Check if feedback is empty or null
+  if (!feedback || feedback.trim() === "") {
+    return Promise.reject(new Error("Cannot send empty feedback."));
+  }
+
+  console.log("Problem Name:", problemName);
   console.log("Feedback:", feedback);
 
   return fetch("https://leetmentor.vercel.app/get_feedback_summary", {
@@ -213,6 +265,7 @@ function sendToServerFeedbackSummary(feedback) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      problem_name: problemName,
       feedback: feedback,
     }),
   })
@@ -774,11 +827,182 @@ function addSaveFeedbackButton(submissionInfoContainer) {
     saveFeedbackButton.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
   });
 
+  // Add click handler for the Save Feedback button
+  saveFeedbackButton.addEventListener("click", () => {
+    // Get the problem name
+    const problemName = extractProblemName();
+
+    if (!problemName) {
+      showToast("Could not determine problem name", "error");
+      return;
+    }
+
+    // Show loading state
+    const originalText = text.textContent;
+    text.textContent = "Saving...";
+    saveFeedbackButton.disabled = true;
+    saveFeedbackButton.style.opacity = "0.7";
+    saveFeedbackButton.style.cursor = "not-allowed";
+
+    // Get the draft feedback from storage
+    chrome.storage.local.get(["feedbackDrafts"], function (result) {
+      const feedbackDrafts = result.feedbackDrafts || {};
+      const feedbackText = feedbackDrafts[problemName];
+
+      if (!feedbackText) {
+        // Reset button
+        text.textContent = originalText;
+        saveFeedbackButton.disabled = false;
+        saveFeedbackButton.style.opacity = "1";
+        saveFeedbackButton.style.cursor = "pointer";
+
+        showToast("No feedback drafts found for this problem", "error");
+        return;
+      }
+
+      // Send the feedback to the server
+      sendToServerFeedbackSummary(problemName, feedbackText)
+        .then((data) => {
+          if (data && data.response) {
+            // Save to the savedFeedback in storage
+            saveFeedbackSummary(problemName, data.response);
+
+            // Remove the draft for this problem
+            delete feedbackDrafts[problemName];
+            delete feedbackDrafts[`${problemName}_timestamp`];
+            chrome.storage.local.set({ feedbackDrafts: feedbackDrafts });
+
+            // Show success toast
+            showToast("Feedback saved successfully!", "success");
+          } else {
+            showToast("Received empty response from server", "error");
+          }
+        })
+        .catch((error) => {
+          showToast(`Error: ${error.message}`, "error");
+        })
+        .finally(() => {
+          // Reset button
+          text.textContent = originalText;
+          saveFeedbackButton.disabled = false;
+          saveFeedbackButton.style.opacity = "1";
+          saveFeedbackButton.style.cursor = "pointer";
+        });
+    });
+  });
+
   // Add the button to the submission info container
   submissionInfoContainer.appendChild(saveFeedbackButton);
   console.log("Save Feedback button added to:", submissionInfoContainer);
 
   return saveFeedbackButton;
+}
+
+/**
+ * Save a feedback summary to chrome.storage.local
+ * @param {string} problemName - The LeetCode problem name
+ * @param {string} summary - The summary text from the API
+ */
+function saveFeedbackSummary(problemName, summary) {
+  if (!problemName || !summary) {
+    console.error("Missing problemName or summary for saving");
+    return;
+  }
+
+  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+    // Get existing saved feedback
+    chrome.storage.local.get(["savedFeedback"], function (result) {
+      const savedFeedback = result.savedFeedback || [];
+
+      // Create new feedback record
+      const today = new Date();
+      const dateStr = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+      // Add new record to the beginning of the array
+      savedFeedback.unshift({
+        problemName,
+        date: dateStr,
+        summary,
+      });
+
+      // Save back to storage
+      chrome.storage.local.set({ savedFeedback }, function () {
+        console.log(`Saved feedback summary for ${problemName}`);
+      });
+    });
+  }
+}
+
+/**
+ * Show a toast message to the user
+ * @param {string} message - The message to display
+ * @param {string} type - The type of toast ('success' or 'error')
+ */
+function showToast(message, type = "info") {
+  // Create the toast container if it doesn't exist
+  let toastContainer = document.getElementById("leetmentor-toast-container");
+
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "leetmentor-toast-container";
+    toastContainer.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    `;
+    document.body.appendChild(toastContainer);
+  }
+
+  // Create the toast
+  const toast = document.createElement("div");
+  toast.className = `leetmentor-toast ${type}`;
+  toast.style.cssText = `
+    background-color: ${type === "error" ? "#F56565" : "#38A169"};
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-top: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    max-width: 300px;
+    word-break: break-word;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+  `;
+
+  toast.textContent = message;
+
+  // Add to container
+  toastContainer.appendChild(toast);
+
+  // Animate in
+  setTimeout(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+  }, 10);
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(20px)";
+
+    // Remove from DOM after animation completes
+    setTimeout(() => {
+      if (toast.parentNode === toastContainer) {
+        toastContainer.removeChild(toast);
+      }
+
+      // Clean up container if empty
+      if (toastContainer.children.length === 0) {
+        document.body.removeChild(toastContainer);
+      }
+    }, 300);
+  }, 3000);
 }
 
 // =============== DOM OBSERVER FUNCTIONS ===============
