@@ -1,17 +1,177 @@
 body {
   font-family: Arial, sans-serif;
   width: 300px;
-  padding: 10px;
+  padding: 15px;
   margin: 0;
+  color: #333;
 }
 
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 h1 {
-  font-size: 18px;
+  font-size: 22px;
   text-align: center;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.info {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.info p {
+  margin: 0;
+}
+
+.scheduler {
+  width: 100%;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+h2 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Day selector styles */
+.days-selector {
+  margin-bottom: 20px;
+}
+
+.selector-label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.day-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.day-btn {
+  flex: 1;
+  margin: 0 2px;
+  padding: 8px 0;
+  border: 1px solid #ccc;
+  background-color: #f8f8f8;
+  color: #666;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.day-btn:first-child {
+  margin-left: 0;
+}
+
+.day-btn:last-child {
+  margin-right: 0;
+}
+
+.day-btn:hover {
+  background-color: #eaeaea;
+}
+
+.day-btn.selected {
+  background-color: #4caf50;
+  color: white;
+  border-color: #3d9040;
+}
+
+/* Form group styles */
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+label {
+  font-weight: bold;
+  width: 20%;
+}
+
+.input-with-icon {
+  position: relative;
+  width: 75%;
+}
+
+input[type="time"] {
+  width: 100%;
+  padding: 8px 30px 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  pointer-events: none;
+}
+
+/* Button styles */
+button#save-reminder {
+  width: 100%;
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button#save-reminder i {
+  margin-right: 8px;
+}
+
+button#save-reminder:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+button#save-reminder:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button#save-reminder.saved {
+  background-color: #3d8b40;
+  cursor: default;
+}
+
+button#save-reminder.saved:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#status-message {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #4caf50;
+  height: 20px;
 }

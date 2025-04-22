@@ -3,7 +3,13 @@
   "name": "LeetMentor",
   "version": "1.0",
   "description": "Get hints, follow-ups and improvements for LeetCode problems",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "alarms",
+    "notifications"
+  ],
   "host_permissions": ["https://leetcode.com/*"],
   "action": {
     "default_popup": "popup/popup.html",
@@ -14,7 +20,8 @@
     }
   },
   "background": {
-    "service_worker": "scripts/background.js"
+    "service_worker": "scripts/background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
