@@ -198,6 +198,43 @@ function sendToServerFollowUp(problem_name) {
     });
 }
 
+/**
+ * Send the problem name to the remote server for follow-up question generation
+ * @param {string} feedback - The feedback from the user
+ * @returns {Promise} - Promise that resolves with the server response
+ */
+function sendToServerFeedbackSummary(feedback) {
+  // Check if code is empty or null
+  console.log("Feedback:", feedback);
+
+  return fetch("https://leetmentor.vercel.app/get_feedback_summary", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      feedback: feedback,
+    }),
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        // Try to get detailed error message
+        const errorText = await response.text();
+        console.error("Error response:", response.status, errorText);
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Success:", data);
+      return data;
+    })
+    .catch((error) => {
+      console.error("Error sending feedback to server:", error);
+      throw error; // Re-throw to propagate to the caller
+    });
+}
+
 // =============== UI COMPONENTS ===============
 /**
  * Expand a button to show a hint
