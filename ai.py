@@ -128,3 +128,46 @@ def get_ai_follow_up(problem_name):
         ]
     )
     return response.output_text
+
+def get_ai_feedback_summary(feedback):
+    prompt = f"""
+    You are an AI feedback summarizer tasked with converting detailed coding feedback into concise, actionable bullet points.
+    
+    FEEDBACK TO SUMMARIZE:
+    {feedback}
+
+    INSTRUCTIONS:
+    1. Extract only the key technical points and suggestions from the feedback
+    2. Convert each point into a brief, actionable bullet point (5-10 words each when possible)
+    3. Use consistent formatting with a dash (-) at the start of each bullet point
+    4. Focus on concrete actions the programmer should take
+    5. Maintain technical accuracy while simplifying language
+    6. Prioritize the most important points if there are many
+    
+    DO NOT:
+    - Add explanations beyond the original feedback
+    - Include pleasantries or unnecessary text
+    - Exceed 5-7 bullet points unless absolutely necessary
+    
+    EXAMPLE:
+    Input: 
+    Consider whether your inner loop's start index might allow i and j to be the same—how could you adjust the range to ensure you're always looking at two distinct elements?
+    Your current time complexity is O(n²). Consider how you might use a hash map for O(1) lookups of complements instead of nested loops.
+    Think about defining i in an outer loop before using it in the inner loop, and ensure your if condition checks nums[i] + nums[j] against target rather than comparing the indices themselves.
+    
+    Output:
+    - Start inner loop at i+1 to avoid duplicate element pairs.
+    - Use hash map for O(n) time with O(1) lookups.
+    - Define i in outer loop; check nums[i]+nums[j]==target, not indices.
+    """
+    response = client.responses.create(
+        model="o4-mini",
+        reasoning={"effort": "medium"},
+        input=[
+            {
+                "role": "user", 
+                "content": prompt
+            }
+        ]
+    )
+    return response.output_text

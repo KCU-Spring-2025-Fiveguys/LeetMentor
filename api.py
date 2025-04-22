@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from ai import get_ai_hint, get_ai_follow_up, get_ai_improvement
+from ai import get_ai_hint, get_ai_follow_up, get_ai_improvement, get_ai_feedback_summary
 app = FastAPI()
 
 # Add CORS middleware to allow cross-origin requests
@@ -21,6 +21,9 @@ class CodeSubmission(BaseModel):
 class FollowUpSubmission(BaseModel):
     problem_name: str
 
+class HistorySubmission(BaseModel):
+    feedback: str
+
 @app.post("/get_hint")
 async def execute_code(submission: CodeSubmission):
     result = get_ai_hint(submission.user_code, submission.language, submission.problem_name)
@@ -34,6 +37,11 @@ async def execute_code(submission: FollowUpSubmission):
 @app.post("/get_improvement")
 async def execute_code(submission: CodeSubmission):
     result = get_ai_improvement(submission.user_code, submission.language, submission.problem_name)
+    return {"response": result}
+
+@app.post("/get_feedback_summary")
+async def execute_code(submission: HistorySubmission):
+    result = get_ai_feedback_summary(submission.feedback)
     return {"response": result}
 
 
