@@ -129,10 +129,9 @@ def get_ai_follow_up(problem_name):
     )
     return response.output_text
 
-def get_ai_feedback_summary(feedback):
+def get_ai_feedback_summary(feedback, problem_name):
     prompt = f"""
     You are an AI feedback summarizer tasked with converting detailed coding feedback into concise, actionable bullet points.
-    
     FEEDBACK TO SUMMARIZE:
     {feedback}
 
@@ -162,7 +161,7 @@ def get_ai_feedback_summary(feedback):
     """
     response = client.responses.create(
         model="o4-mini",
-        reasoning={"effort": "medium"},
+        reasoning={"effort": "low"},
         input=[
             {
                 "role": "user", 

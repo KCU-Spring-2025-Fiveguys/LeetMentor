@@ -22,6 +22,7 @@ class FollowUpSubmission(BaseModel):
     problem_name: str
 
 class HistorySubmission(BaseModel):
+    problem_name: str
     feedback: str
 
 @app.post("/get_hint")
@@ -41,7 +42,7 @@ async def execute_code(submission: CodeSubmission):
 
 @app.post("/get_feedback_summary")
 async def execute_code(submission: HistorySubmission):
-    result = get_ai_feedback_summary(submission.feedback)
+    result = get_ai_feedback_summary(submission.feedback, submission.problem_name)
     return {"response": result}
 
 
