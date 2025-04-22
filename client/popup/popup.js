@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveButtonText = saveButton.querySelector("span");
   const statusMessage = document.getElementById("status-message");
   const dayButtons = document.querySelectorAll(".day-btn");
+  const viewHistoryButton = document.getElementById("view-history");
 
   // State variables
   let selectedDays = [];
@@ -182,6 +183,47 @@ document.addEventListener("DOMContentLoaded", function () {
             "Could not save settings: Storage API not available",
             "error"
           );
+        }
+      });
+    }
+
+    // View History button click handler
+    if (viewHistoryButton) {
+      viewHistoryButton.addEventListener("click", function () {
+        // Check if chrome.sidePanel API exists
+        if (typeof chrome !== "undefined" && chrome.sidePanel && chrome.tabs) {
+          try {
+            // Get the current active tab
+            chrome.tabs.query(
+              { active: true, currentWindow: true },
+              function (tabs) {
+                if (tabs && tabs.length > 0) {
+                  // Open the side panel for the current tab
+                  chrome.sidePanel
+                    .open({ tabId: tabs[0].id })
+                    .then(() => {
+                      // Close the popup after opening the side panel
+                      window.close();
+                    })
+                    .catch((err) => {
+                      console.error("Error opening side panel:", err);
+                      showStatus(
+                        "Failed to open history panel: " + err.message,
+                        "error"
+                      );
+                    });
+                } else {
+                  showStatus("Couldn't determine current tab", "error");
+                }
+              }
+            );
+          } catch (error) {
+            console.error("Error opening side panel:", error);
+            showStatus("Failed to open history panel", "error");
+          }
+        } else {
+          console.warn("Chrome sidePanel API not available");
+          showStatus("History panel not supported in this browser", "error");
         }
       });
     }

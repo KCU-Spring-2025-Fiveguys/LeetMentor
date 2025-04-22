@@ -15,11 +15,6 @@ body {
   margin: 8px;
 }
 
-/* Header & Title Styles */
-.header {
-  padding-top: 16px;
-}
-
 .title-container {
   display: flex;
   align-items: center;
@@ -40,9 +35,15 @@ h1 {
 }
 
 /* Divider */
-.divider {
+.divider_top {
   border-bottom: 1px solid #e1e4e8;
   margin: 16px 0;
+  width: 100%;
+}
+
+.divider_bottom {
+  border-bottom: 1px solid #e1e4e8;
+  margin: 8px 0;
   width: 100%;
 }
 
@@ -172,7 +173,8 @@ input[type="time"]:focus {
 }
 
 /* Button Styles */
-button#save-reminder {
+button#save-reminder,
+button#view-history {
   width: 100%;
   padding: 10px 16px;
   background-color: #28a745;
@@ -189,16 +191,19 @@ button#save-reminder {
   box-shadow: 0 1px 2px rgba(27, 31, 35, 0.1);
 }
 
-button#save-reminder i {
+button#save-reminder i,
+button#view-history i {
   margin-right: 8px;
   font-size: 14px;
 }
 
-button#save-reminder:hover {
+button#save-reminder:hover,
+button#view-history:hover {
   background-color: #218838;
 }
 
-button#save-reminder:active {
+button#save-reminder:active,
+button#view-history:active {
   transform: translateY(1px);
   box-shadow: inset 0 1px 2px rgba(27, 31, 35, 0.2);
 }
@@ -210,6 +215,11 @@ button#save-reminder.saved {
 
 button#save-reminder.saved:hover {
   background-color: #2ea44f;
+}
+
+/* Add spacing between save and history buttons */
+button#view-history {
+  margin-top: 16px;
 }
 
 /* Status Message */

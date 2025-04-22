@@ -8,7 +8,9 @@
     "scripting",
     "storage",
     "alarms",
-    "notifications"
+    "notifications",
+    "sidePanel",
+    "tabs"
   ],
   "host_permissions": ["https://leetcode.com/*"],
   "action": {
@@ -29,6 +31,9 @@
       "js": ["scripts/content.js"]
     }
   ],
+  "side_panel": {
+    "default_path": "history/history.html"
+  },
   "icons": {
     "16": "icons/icon.png",
     "48": "icons/icon.png",

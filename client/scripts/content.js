@@ -1064,7 +1064,7 @@ function expandButtonWithImprovement(button, improvementText) {
   button.style.whiteSpace = "normal";
   button.style.alignItems = "flex-start";
   button.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.2)";
-  button.style.backgroundColor = "#E77F00"; // Darker orange for expanded state
+  button.style.backgroundColor = "#FFA116"; // Darker orange for expanded state
 
   // Store expanded state
   button.dataset.expanded = "true";
