@@ -538,7 +538,6 @@ function addAcceptedPanel(resultElement) {
     margin: 0 0 16px 0;
     padding: 16px;
     background-color: white;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     width: 100%;
     box-sizing: border-box;
     min-height: 120px;

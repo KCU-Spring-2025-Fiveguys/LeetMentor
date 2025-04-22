@@ -9,11 +9,21 @@
     />
   </head>
   <body>
-    <div class="container">
-      <h1>Welcome to LeetMentor!</h1>
-      <div class="info">
-        <p>Get hints, follow-ups and improvements for LeetCode problems</p>
+    <div class="popup-container">
+      <div class="header">
+        <div class="title-container">
+          <img
+            src="../icons/icon.png"
+            alt="LeetMentor"
+            class="brand-icon"
+            width="20"
+            height="20"
+          />
+          <h1>Welcome to LeetMentor!</h1>
+        </div>
       </div>
+
+      <div class="divider"></div>
 
       <div class="scheduler">
         <h2>Reminder Schedule</h2>
@@ -86,6 +96,7 @@
           <label for="reminder-time">Time:</label>
           <div class="input-with-icon">
             <input type="time" id="reminder-time" name="reminder-time" />
+            <i class="fa-solid fa-clock icon"></i>
           </div>
         </div>
 
@@ -94,6 +105,8 @@
           <i class="fa-solid fa-bell"></i>
           <span>Schedule Reminder</span>
         </button>
+
+        <!-- Status message -->
         <div id="status-message" aria-live="polite"></div>
       </div>
     </div>

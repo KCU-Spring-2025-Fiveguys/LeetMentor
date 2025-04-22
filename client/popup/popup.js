@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
               statusMessage.textContent = `Reminders set for ${daysText} at ${formatTime(
                 result.reminderTime
               )}`;
-              statusMessage.style.color = "#4CAF50";
+              statusMessage.classList.add("success");
             }
           }
         }
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.warn("Chrome storage API not available");
       if (statusMessage) {
         statusMessage.textContent = "Storage API not available";
-        statusMessage.style.color = "red";
+        statusMessage.classList.add("error");
       }
     }
   }
@@ -254,6 +254,12 @@ document.addEventListener("DOMContentLoaded", function () {
       saveButton.disabled = false;
       saveButtonText.textContent = "Schedule Reminder";
     }
+
+    // Clear any status message when making changes
+    if (statusMessage) {
+      statusMessage.textContent = "";
+      statusMessage.classList.remove("success", "error");
+    }
   }
 
   function getDaysText(days) {
@@ -275,8 +281,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function showStatus(message, type) {
     if (statusMessage) {
+      // Ensure no character encoding issues by using simple ASCII
       statusMessage.textContent = message;
-      statusMessage.style.color = type === "error" ? "red" : "#4CAF50";
+
+      // Remove existing classes
+      statusMessage.classList.remove("success", "error");
+
+      // Add appropriate class based on status type
+      if (type === "error") {
+        statusMessage.classList.add("error");
+      } else {
+        statusMessage.classList.add("success");
+      }
     }
   }
 });

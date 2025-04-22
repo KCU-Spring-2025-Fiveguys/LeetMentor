@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "LeetMentor",
   "version": "1.0",
-  "description": "Get hints, follow-ups and improvements for LeetCode problems",
+  "description": "Your personal AI coding assistant for LeetCode",
   "permissions": [
     "activeTab",
     "scripting",
