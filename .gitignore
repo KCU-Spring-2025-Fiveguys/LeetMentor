@@ -11,5 +11,4 @@ leetmento-firebase-adminsdk-fbsvc-649dd73681.json
 #environment variables
 .env
 #vercel
-.vercel 
-
+.vercel/
