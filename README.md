@@ -57,26 +57,24 @@ LeetMentor is a **Chrome extension + FastAPI backend** that gives you hints, fee
 
 ## 🏁 Getting Started
 
-1.  **Clone the repo** 📥
+1.  **Clone the repo**
 
 ```bash
 git clone https://github.com/KCU-Spring-2025-Fiveguys/LeetMentor.git
 cd LeetMentor
 ```
 
-2.  **Load the extension** 🔌
-
-1.  Open `chrome://extensions/`
-1.  Toggle Developer mode on (top right)
-1.  Click Load unpacked and select the `client/` folder
-1.  The LeetMentor icon will appear in your toolbar
+2.  Open `chrome://extensions/`
+3.  Toggle Developer mode on (top right)
+4.  Click Load unpacked and select the `client/` folder
+5.  The LeetMentor icon will appear in your toolbar
 
 ---
 
 ## 📱 Usage
 
-1. Go to any LeetCode problem page 🧩
-2. Click the LeetMentor icon in your toolbar 🖱️
+1. Go to any LeetCode problem page
+2. Click the LeetMentor icon in your toolbar
 3. You can use the following features:
    - 💡 Get Hint
    - 📊 Analyze Code
@@ -96,18 +94,18 @@ cd LeetMentor
 
 ## 🤝 Contributing
 
-We welcome your ideas! 🌟
+We welcome your ideas!
 
-1. Fork the repository 🍴
-2. Create a branch: ✨
+1. Fork the repository
+2. Create a branch:
    ```bash
    git checkout -b feature/your-cool-feature
    ```
-3. Commit your changes: 📝
+3. Commit your changes:
    ```bash
    git commit -m "Add awesome feature"
    ```
-4. Push and open a pull request 🚀
+4. Push and open a pull request
 
 ---
 
