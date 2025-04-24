@@ -44,3 +44,6 @@ ENV/
 *-firebase-adminsdk-*.json
 *firebase*.json
 *serviceAccount*.json
+leetmento-firebase-adminsdk-fbsvc-649dd73681.json
+#vercel
+.vercel/
