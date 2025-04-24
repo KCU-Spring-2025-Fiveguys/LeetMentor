@@ -47,3 +47,4 @@ ENV/
 leetmento-firebase-adminsdk-fbsvc-649dd73681.json
 #vercel
 .vercel/
+vercel.json
