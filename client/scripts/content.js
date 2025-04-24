@@ -184,27 +184,43 @@ function saveFeedbackDraft(problemName, feedbackText) {
     return;
   }
 
-  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-    // Get existing drafts
-    chrome.storage.local.get(["feedbackDrafts"], function (result) {
-      const feedbackDrafts = result.feedbackDrafts || {};
-
-      // Append new feedback or create new entry
-      if (feedbackDrafts[problemName]) {
-        feedbackDrafts[problemName] += "\n" + feedbackText;
-      } else {
-        feedbackDrafts[problemName] = feedbackText;
-      }
-
-      // Add timestamp for cleanup purposes
-      feedbackDrafts[`${problemName}_timestamp`] = Date.now();
-
-      // Save back to storage
-      chrome.storage.local.set({ feedbackDrafts: feedbackDrafts }, function () {
-        console.log(`Saved feedback draft for ${problemName}`);
-      });
-    });
+  // Check if Chrome API is available
+  if (typeof chrome === "undefined") {
+    console.error("Chrome API not available");
+    return;
   }
+
+  // Check if storage API is available
+  if (!chrome.storage) {
+    console.error("Chrome storage API not available");
+    return;
+  }
+
+  // Check if local storage is available
+  if (!chrome.storage.local) {
+    console.error("Chrome local storage API not available");
+    return;
+  }
+
+  // Get existing drafts
+  chrome.storage.local.get(["feedbackDrafts"], function (result) {
+    const feedbackDrafts = result.feedbackDrafts || {};
+
+    // Append new feedback or create new entry
+    if (feedbackDrafts[problemName]) {
+      feedbackDrafts[problemName] += "\n" + feedbackText;
+    } else {
+      feedbackDrafts[problemName] = feedbackText;
+    }
+
+    // Add timestamp for cleanup purposes
+    feedbackDrafts[`${problemName}_timestamp`] = Date.now();
+
+    // Save back to storage
+    chrome.storage.local.set({ feedbackDrafts: feedbackDrafts }, function () {
+      console.log(`Saved feedback draft for ${problemName}`);
+    });
+  });
 }
 
 /**
@@ -837,6 +853,24 @@ function addSaveFeedbackButton(submissionInfoContainer) {
       return;
     }
 
+    // Check if Chrome API is available
+    if (typeof chrome === "undefined") {
+      showToast("Chrome API not available", "error");
+      return;
+    }
+
+    // Check if storage API is available
+    if (!chrome.storage) {
+      showToast("Chrome storage API not available", "error");
+      return;
+    }
+
+    // Check if local storage is available
+    if (!chrome.storage.local) {
+      showToast("Chrome local storage API not available", "error");
+      return;
+    }
+
     // Show loading state
     const originalText = text.textContent;
     text.textContent = "Saving...";
@@ -909,28 +943,44 @@ function saveFeedbackSummary(problemName, summary) {
     return;
   }
 
-  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-    // Get existing saved feedback
-    chrome.storage.local.get(["savedFeedback"], function (result) {
-      const savedFeedback = result.savedFeedback || [];
-
-      // Create new feedback record
-      const today = new Date();
-      const dateStr = today.toISOString().split("T")[0]; // YYYY-MM-DD format
-
-      // Add new record to the beginning of the array
-      savedFeedback.unshift({
-        problemName,
-        date: dateStr,
-        summary,
-      });
-
-      // Save back to storage
-      chrome.storage.local.set({ savedFeedback }, function () {
-        console.log(`Saved feedback summary for ${problemName}`);
-      });
-    });
+  // Check if Chrome API is available
+  if (typeof chrome === "undefined") {
+    console.error("Chrome API not available");
+    return;
   }
+
+  // Check if storage API is available
+  if (!chrome.storage) {
+    console.error("Chrome storage API not available");
+    return;
+  }
+
+  // Check if local storage is available
+  if (!chrome.storage.local) {
+    console.error("Chrome local storage API not available");
+    return;
+  }
+
+  // Get existing saved feedback
+  chrome.storage.local.get(["savedFeedback"], function (result) {
+    const savedFeedback = result.savedFeedback || [];
+
+    // Create new feedback record
+    const today = new Date();
+    const dateStr = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+    // Add new record to the beginning of the array
+    savedFeedback.unshift({
+      problemName,
+      date: dateStr,
+      summary,
+    });
+
+    // Save back to storage
+    chrome.storage.local.set({ savedFeedback }, function () {
+      console.log(`Saved feedback summary for ${problemName}`);
+    });
+  });
 }
 
 /**

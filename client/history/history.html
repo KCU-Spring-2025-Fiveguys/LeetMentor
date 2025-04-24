@@ -26,6 +26,31 @@
       <div class="divider"></div>
 
       <div class="history-content">
+        <div class="controls-row">
+          <div class="search-container">
+            <input
+              type="text"
+              id="history-search"
+              placeholder="Search problems..."
+              class="history-search-input"
+            />
+            <i class="fas fa-search search-icon"></i>
+            <button id="clear-search" class="clear-search-button">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="sort-container">
+            <div class="sort-control">
+              <span>Sort:</span>
+              <select id="history-sort" class="history-sort-select">
+                <option value="latest">Latest</option>
+                <option value="oldest">Oldest</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div id="history-list" class="history-list">
           <!-- History items will be dynamically populated here -->
           <div class="empty-message">No history items to display yet.</div>
