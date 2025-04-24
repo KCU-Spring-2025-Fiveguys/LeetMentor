@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LeetMentor</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="popup-container">
+      <div class="header">
+        <div class="title-container">
+          <img
+            src="../icons/icon.png"
+            alt="LeetMentor"
+            class="brand-icon"
+            width="20"
+            height="20"
+          />
+          <h1>Welcome to LeetMentor!</h1>
+        </div>
+      </div>
+
+      <div class="divider_top"></div>
+
+      <div class="scheduler">
+        <h2>Reminder Schedule</h2>
+
+        <!-- Recurring day selector -->
+        <div class="days-selector">
+          <p class="selector-label">Repeat on:</p>
+          <div class="day-buttons">
+            <button
+              type="button"
+              class="day-btn"
+              data-day="0"
+              aria-pressed="false"
+            >
+              Sun
+            </button>
+            <button
+              type="button"
+              class="day-btn"
+              data-day="1"
+              aria-pressed="false"
+            >
+              Mon
+            </button>
+            <button
+              type="button"
+              class="day-btn"
+              data-day="2"
+              aria-pressed="false"
+            >
+              Tue
+            </button>
+            <button
+              type="button"
+              class="day-btn"
+              data-day="3"
+              aria-pressed="false"
+            >
+              Wed
+            </button>
+            <button
+              type="button"
+              class="day-btn"
+              data-day="4"
+              aria-pressed="false"
+            >
+              Thu
+            </button>
+            <button
+              type="button"
+              class="day-btn"
+              data-day="5"
+              aria-pressed="false"
+            >
+              Fri
+            </button>
+            <button
+              type="button"
+              class="day-btn"
+              data-day="6"
+              aria-pressed="false"
+            >
+              Sat
+            </button>
+          </div>
+        </div>
+
+        <!-- Time selection -->
+        <div class="form-group">
+          <label for="reminder-time">Time:</label>
+          <div class="input-with-icon">
+            <input type="time" id="reminder-time" name="reminder-time" />
+            <i class="fa-solid fa-clock icon"></i>
+          </div>
+        </div>
+
+        <!-- Action button -->
+        <button id="save-reminder" aria-live="polite">
+          <i class="fa-solid fa-bell"></i>
+          <span>Schedule Reminder</span>
+        </button>
+
+        <!-- Status message -->
+        <div id="status-message" aria-live="polite"></div>
+
+        <!-- Divider before history button -->
+        <div class="divider_bottom"></div>
+
+        <!-- View History button -->
+        <button id="view-history">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>View History</span>
+        </button>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
