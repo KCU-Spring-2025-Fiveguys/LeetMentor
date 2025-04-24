@@ -3,17 +3,52 @@
 
 // =============== EXTRACTION FUNCTIONS ===============
 /**
- * Extract the problem Name from the LeetCode problem page
- * @returns {string|null} - The problem Name or null if not found
+ * Extract the problem Name and difficulty from the LeetCode problem page
+ * @returns {Object|null} - The problem information or null if not found
  */
 function extractProblemName() {
-  // Try to get the problem name from the title element
+  // First try to get problem info from the problem header
+  const problemHeader = document.querySelector(
+    "a.no-underline.hover\\:text-blue-s.dark\\:hover\\:text-dark-blue-s.truncate.cursor-text.whitespace-normal.hover\\:\\!text-\\[inherit\\]"
+  );
+
+  // Try to extract difficulty badge text
+  let difficulty = null;
+  const difficultyBadge = document.querySelector(
+    ".relative.inline-flex.items-center.justify-center.text-caption.px-2.py-1.gap-1.rounded-full.bg-fill-secondary"
+  );
+  if (difficultyBadge) {
+    difficulty = difficultyBadge.textContent.trim();
+  }
+
+  if (problemHeader) {
+    const problemUrl = problemHeader.getAttribute("href");
+    const problemText = problemHeader.textContent.trim();
+    // Extract number and title from text like "1. Two Sum"
+    const match = problemText.match(/^(\d+\.)\s+(.+)$/);
+
+    if (match && match[1] && match[2]) {
+      return {
+        number: match[1].trim(), // e.g. "1."
+        title: match[2].trim(), // e.g. "Two Sum"
+        url: problemUrl, // e.g. "/problems/two-sum/"
+        fullTitle: problemText, // e.g. "1. Two Sum"
+        difficulty: difficulty, // e.g. "Easy", "Medium", or "Hard"
+      };
+    }
+  }
+
+  // Fallback to the title element if problem header not found
   const titleElement = document.querySelector("title");
   if (titleElement) {
     const titleText = titleElement.textContent;
     const match = titleText.match(/^(.*?)\s-\sLeetCode$/);
     if (match && match[1]) {
-      return match[1].trim();
+      return {
+        title: match[1].trim(),
+        fullTitle: match[1].trim(),
+        difficulty: difficulty,
+      };
     }
   }
 }
@@ -63,7 +98,7 @@ function extractCode() {
  * Send extracted code to the remote server for hint generation
  * @param {string} code - The extracted code from the editor
  * @param {string} language - The programming language used
- * @param {string} problem_name - The LeetCode problem name
+ * @param {string|Object} problem_name - The LeetCode problem name or problem info object
  * @returns {Promise} - Promise that resolves with the server response
  */
 function sendToServerHint(code, language, problem_name) {
@@ -76,9 +111,13 @@ function sendToServerHint(code, language, problem_name) {
     );
   }
 
+  // Extract just the problem title from object if needed (not the full title with number)
+  const problemTitle =
+    typeof problem_name === "object" ? problem_name.title : problem_name;
+
   console.log("Sending code:", code);
   console.log("Language:", language);
-  console.log("Problem name:", problem_name);
+  console.log("Problem name:", problemTitle);
 
   return fetch("https://leetmentor.vercel.app/get_hint", {
     method: "POST",
@@ -88,7 +127,7 @@ function sendToServerHint(code, language, problem_name) {
     body: JSON.stringify({
       user_code: code,
       language: language,
-      problem_name: problem_name,
+      problem_name: problemTitle,
     }),
   })
     .then(async (response) => {
@@ -120,7 +159,7 @@ function sendToServerHint(code, language, problem_name) {
  * Send extracted code to the remote server for improvement generation
  * @param {string} code - The extracted code from the editor
  * @param {string} language - The programming language used
- * @param {string} problem_name - The LeetCode problem name
+ * @param {string|Object} problem_name - The LeetCode problem name or problem info object
  * @returns {Promise} - Promise that resolves with the server response
  */
 function sendToServerImprovement(code, language, problem_name) {
@@ -133,9 +172,13 @@ function sendToServerImprovement(code, language, problem_name) {
     );
   }
 
+  // Extract just the problem title from object if needed (not the full title with number)
+  const problemTitle =
+    typeof problem_name === "object" ? problem_name.title : problem_name;
+
   console.log("Sending code:", code);
   console.log("Language:", language);
-  console.log("Problem name:", problem_name);
+  console.log("Problem name:", problemTitle);
 
   return fetch("https://leetmentor.vercel.app/get_improvement", {
     method: "POST",
@@ -145,7 +188,7 @@ function sendToServerImprovement(code, language, problem_name) {
     body: JSON.stringify({
       user_code: code,
       language: language,
-      problem_name: problem_name,
+      problem_name: problemTitle,
     }),
   })
     .then(async (response) => {
@@ -175,11 +218,33 @@ function sendToServerImprovement(code, language, problem_name) {
 
 /**
  * Saves feedback response to the feedbackDrafts in chrome.storage.local
- * @param {string} problemName - The LeetCode problem name
+ * @param {string|Object} problemName - The LeetCode problem name or problem info object
  * @param {string} feedbackText - The feedback text to save
  */
 function saveFeedbackDraft(problemName, feedbackText) {
-  if (!problemName || !feedbackText) {
+  // Handle case where problemName is an object from updated extractProblemName
+  let problemKey, problemInfo;
+
+  if (typeof problemName === "object" && problemName !== null) {
+    problemKey = problemName.fullTitle; // Use the full title "1. Two Sum" as the key
+    problemInfo = {
+      title: problemName.title,
+      number: problemName.number || "",
+      url: problemName.url || "",
+      fullTitle: problemName.fullTitle,
+      difficulty: problemName.difficulty || "",
+    };
+  } else {
+    // Backwards compatibility for existing code
+    problemKey = problemName;
+    problemInfo = {
+      title: problemName,
+      fullTitle: problemName,
+      difficulty: "",
+    };
+  }
+
+  if (!problemKey || !feedbackText) {
     console.error("Missing problemName or feedbackText for draft saving");
     return;
   }
@@ -207,30 +272,37 @@ function saveFeedbackDraft(problemName, feedbackText) {
     const feedbackDrafts = result.feedbackDrafts || {};
 
     // Append new feedback or create new entry
-    if (feedbackDrafts[problemName]) {
-      feedbackDrafts[problemName] += "\n" + feedbackText;
+    if (feedbackDrafts[problemKey]) {
+      feedbackDrafts[problemKey].text =
+        feedbackDrafts[problemKey].text + "\n" + feedbackText;
     } else {
-      feedbackDrafts[problemName] = feedbackText;
+      feedbackDrafts[problemKey] = {
+        info: problemInfo,
+        text: feedbackText,
+      };
     }
 
     // Add timestamp for cleanup purposes
-    feedbackDrafts[`${problemName}_timestamp`] = Date.now();
+    feedbackDrafts[`${problemKey}_timestamp`] = Date.now();
 
     // Save back to storage
     chrome.storage.local.set({ feedbackDrafts: feedbackDrafts }, function () {
-      console.log(`Saved feedback draft for ${problemName}`);
+      console.log(`Saved feedback draft for ${problemKey}`);
     });
   });
 }
 
 /**
  * Send the problem name to the remote server for follow-up question generation
- * @param {string} problem_name - The LeetCode problem name
+ * @param {string|Object} problem_name - The LeetCode problem name or problem info object
  * @returns {Promise} - Promise that resolves with the server response
  */
 function sendToServerFollowUp(problem_name) {
-  // Check if code is empty or null
-  console.log("Problem name:", problem_name);
+  // Extract just the problem title from object if needed (not the full title with number)
+  const problemTitle =
+    typeof problem_name === "object" ? problem_name.title : problem_name;
+
+  console.log("Problem name:", problemTitle);
 
   return fetch("https://leetmentor.vercel.app/get_follow_up", {
     method: "POST",
@@ -238,7 +310,7 @@ function sendToServerFollowUp(problem_name) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      problem_name: problem_name,
+      problem_name: problemTitle,
     }),
   })
     .then(async (response) => {
@@ -262,7 +334,7 @@ function sendToServerFollowUp(problem_name) {
 
 /**
  * Send the problem name to the remote server for follow-up question generation
- * @param {string} problemName - The name of the LeetCode problem
+ * @param {string|Object} problemName - The name of the LeetCode problem or problem info object
  * @param {string} feedback - The feedback from the user
  * @returns {Promise} - Promise that resolves with the server response
  */
@@ -272,7 +344,11 @@ function sendToServerFeedbackSummary(problemName, feedback) {
     return Promise.reject(new Error("Cannot send empty feedback."));
   }
 
-  console.log("Problem Name:", problemName);
+  // Extract just the problem title from object if needed (not the full title with number)
+  const problemTitle =
+    typeof problemName === "object" ? problemName.title : problemName;
+
+  console.log("Problem Name:", problemTitle);
   console.log("Feedback:", feedback);
 
   return fetch("https://leetmentor.vercel.app/get_feedback_summary", {
@@ -281,7 +357,7 @@ function sendToServerFeedbackSummary(problemName, feedback) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      problem_name: problemName,
+      problem_name: problemTitle,
       feedback: feedback,
     }),
   })
@@ -469,14 +545,12 @@ function addHelpButton(resultElement, clickHandler) {
     if (helpButton.dataset.expanded !== "true") {
       helpButton.style.backgroundColor = "rgb(66, 113, 244)"; // Slightly darker blue
       helpButton.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
-      helpButton.style.transform = "translateY(-2px)";
     }
   });
   helpButton.addEventListener("mouseout", () => {
     if (helpButton.dataset.expanded !== "true") {
       helpButton.style.backgroundColor = "rgb(89, 128, 248)";
       helpButton.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
-      helpButton.style.transform = "translateY(0)";
     }
   });
 
@@ -738,8 +812,8 @@ function addAcceptedPanel(resultElement) {
 
   // Fetch follow-up question immediately after panel insertion
   function fetchFollowUpQuestion() {
-    const problem_name = extractProblemName();
-    if (!problem_name) {
+    const problem_info = extractProblemName();
+    if (!problem_info) {
       showError("Could not determine the problem name");
       return;
     }
@@ -747,8 +821,10 @@ function addAcceptedPanel(resultElement) {
     // Show loading indicator
     showLoadingState();
 
-    // Fetch the follow-up question
-    sendToServerFollowUp(problem_name)
+    // Fetch the follow-up question - ensure we send just the title, not the full title with number
+    const problemTitle =
+      typeof problem_info === "object" ? problem_info.title : problem_info;
+    sendToServerFollowUp(problemTitle)
       .then((data) => {
         if (data && data.response) {
           showFollowUpQuestion(data.response);
@@ -846,9 +922,9 @@ function addSaveFeedbackButton(submissionInfoContainer) {
   // Add click handler for the Save Feedback button
   saveFeedbackButton.addEventListener("click", () => {
     // Get the problem name
-    const problemName = extractProblemName();
+    const problemInfo = extractProblemName();
 
-    if (!problemName) {
+    if (!problemInfo) {
       showToast("Could not determine problem name", "error");
       return;
     }
@@ -881,7 +957,10 @@ function addSaveFeedbackButton(submissionInfoContainer) {
     // Get the draft feedback from storage
     chrome.storage.local.get(["feedbackDrafts"], function (result) {
       const feedbackDrafts = result.feedbackDrafts || {};
-      const feedbackText = feedbackDrafts[problemName];
+      const problemKey =
+        typeof problemInfo === "object" ? problemInfo.fullTitle : problemInfo;
+      const feedbackEntry = feedbackDrafts[problemKey];
+      const feedbackText = feedbackEntry ? feedbackEntry.text : null;
 
       if (!feedbackText) {
         // Reset button
@@ -895,15 +974,15 @@ function addSaveFeedbackButton(submissionInfoContainer) {
       }
 
       // Send the feedback to the server
-      sendToServerFeedbackSummary(problemName, feedbackText)
+      sendToServerFeedbackSummary(problemInfo, feedbackText)
         .then((data) => {
           if (data && data.response) {
             // Save to the savedFeedback in storage
-            saveFeedbackSummary(problemName, data.response);
+            saveFeedbackSummary(problemInfo, data.response);
 
             // Remove the draft for this problem
-            delete feedbackDrafts[problemName];
-            delete feedbackDrafts[`${problemName}_timestamp`];
+            delete feedbackDrafts[problemKey];
+            delete feedbackDrafts[`${problemKey}_timestamp`];
             chrome.storage.local.set({ feedbackDrafts: feedbackDrafts });
 
             // Show success toast
@@ -934,11 +1013,30 @@ function addSaveFeedbackButton(submissionInfoContainer) {
 
 /**
  * Save a feedback summary to chrome.storage.local
- * @param {string} problemName - The LeetCode problem name
+ * @param {string|Object} problemName - The LeetCode problem name or problem info object
  * @param {string} summary - The summary text from the API
  */
 function saveFeedbackSummary(problemName, summary) {
-  if (!problemName || !summary) {
+  let problemInfo;
+
+  if (typeof problemName === "object" && problemName !== null) {
+    problemInfo = {
+      title: problemName.title,
+      number: problemName.number || "",
+      url: problemName.url || "",
+      fullTitle: problemName.fullTitle,
+      difficulty: problemName.difficulty || "",
+    };
+  } else {
+    // Backwards compatibility for existing code
+    problemInfo = {
+      title: problemName,
+      fullTitle: problemName,
+      difficulty: "",
+    };
+  }
+
+  if (!problemInfo || !summary) {
     console.error("Missing problemName or summary for saving");
     return;
   }
@@ -971,14 +1069,15 @@ function saveFeedbackSummary(problemName, summary) {
 
     // Add new record to the beginning of the array
     savedFeedback.unshift({
-      problemName,
+      problemInfo: problemInfo,
+      problemName: problemInfo.fullTitle, // For backwards compatibility
       date: dateStr,
       summary,
     });
 
     // Save back to storage
     chrome.storage.local.set({ savedFeedback }, function () {
-      console.log(`Saved feedback summary for ${problemName}`);
+      console.log(`Saved feedback summary for ${problemInfo.fullTitle}`);
     });
   });
 }
@@ -1283,9 +1382,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "extractCode") {
     const code = extractCode();
     const language = extractLanguage();
-    const problem_name = extractProblemName();
+    const problemInfo = extractProblemName();
     if (code) {
-      sendToServerHint(code, language, problem_name)
+      sendToServerHint(code, language, problemInfo)
         .then(() => {
           sendResponse({ status: "success" });
         })
