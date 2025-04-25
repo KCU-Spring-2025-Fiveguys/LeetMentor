@@ -259,8 +259,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Calculate the minutes until the first alarm
-        const delayInMinutes =
+        let delayInMinutes =
           (targetDay.getTime() - now.getTime()) / (1000 * 60);
+
+        // Ensure minimum delay is 0.5 minutes (30 seconds) as required by Chrome
+        delayInMinutes = Math.max(delayInMinutes, 0.5);
 
         // Create a weekly recurring alarm
         chrome.alarms.create(alarmName, {

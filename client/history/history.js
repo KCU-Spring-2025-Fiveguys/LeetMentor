@@ -651,9 +651,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const firstLine = summary.split("\n")[0];
     const hasMultipleLines = summary.includes("\n");
 
+    // Check for bullet points (more than 2 dash-bullet points)
+    const bulletPointMatches = summary.match(/- /g);
+    const bulletPointCount = bulletPointMatches ? bulletPointMatches.length : 0;
+    const hasManyBulletPoints = bulletPointCount > 2;
+    const shouldShowToggle = hasMultipleLines && hasManyBulletPoints;
+
     const collapsedContent = document.createElement("div");
     collapsedContent.className = "collapsed-content";
-    collapsedContent.textContent = hasMultipleLines
+    collapsedContent.textContent = shouldShowToggle
       ? `${firstLine}...`
       : firstLine;
     historyItem.appendChild(collapsedContent);
@@ -664,8 +670,8 @@ document.addEventListener("DOMContentLoaded", function () {
     content.textContent = summary;
     historyItem.appendChild(content);
 
-    // Add toggle button only if there are multiple lines
-    if (hasMultipleLines) {
+    // Add toggle button only if there are multiple lines AND more than 2 bullet points
+    if (shouldShowToggle) {
       const toggleButton = document.createElement("button");
       toggleButton.className = "toggle-collapse";
       toggleButton.innerHTML = '<i class="fas fa-chevron-down"></i>';
@@ -677,6 +683,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const isExpanded = content.classList.toggle("expanded");
         collapsedContent.style.display = isExpanded ? "none" : "block";
+        content.style.display = isExpanded ? "block" : "none";
 
         if (isExpanded) {
           toggleButton.innerHTML = '<i class="fas fa-chevron-up"></i>';
@@ -696,17 +703,19 @@ document.addEventListener("DOMContentLoaded", function () {
       const isInitiallyExpanded = getExpansionState(index);
       if (isInitiallyExpanded) {
         content.classList.add("expanded");
+        content.style.display = "block";
         collapsedContent.style.display = "none";
         toggleButton.innerHTML = '<i class="fas fa-chevron-up"></i>';
         toggleButton.title = "Show less";
       } else {
         content.classList.remove("expanded");
+        content.style.display = "none";
         collapsedContent.style.display = "block";
       }
     } else {
-      // For single-line summaries, always show the collapsed content
-      collapsedContent.style.display = "block";
-      content.style.display = "none";
+      // For entries without enough bullet points, always show the full content
+      content.style.display = "block";
+      collapsedContent.style.display = "none";
     }
 
     return historyItem;
@@ -836,6 +845,18 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update the entry - only change the summary content, not the title
         const entry = savedFeedback[index];
 
+        // Get the current histogram item
+        const historyItem = document.querySelector(
+          `.history-item[data-index="${index}"]`
+        );
+
+        // Count dash-bullet points in the new content
+        const bulletPointMatches = newContent.match(/- /g);
+        const bulletPointCount = bulletPointMatches
+          ? bulletPointMatches.length
+          : 0;
+        const hasMultipleLines = newContent.includes("\n");
+
         // Update the summary only
         entry.summary = newContent;
 
@@ -843,7 +864,8 @@ document.addEventListener("DOMContentLoaded", function () {
         chrome.storage.local.set({ savedFeedback }, function () {
           console.log(`Updated entry at index ${index}`);
 
-          // Reload the history panel
+          // Always reload the history panel to ensure proper toggle button display
+          // This is more reliable than trying to update the DOM elements directly
           loadSavedFeedback();
         });
       }
@@ -875,13 +897,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
     contentElement.textContent = originalContent;
 
-    // Restore display states
-    if (contentElement.classList.contains("expanded")) {
+    // Check for bullet points (more than 2 dash-bullet points)
+    const bulletPointMatches = originalContent.match(/- /g);
+    const bulletPointCount = bulletPointMatches ? bulletPointMatches.length : 0;
+    const hasManyBulletPoints = bulletPointCount > 2;
+    const hasMultipleLines = originalContent.includes("\n");
+    const shouldShowToggle = hasMultipleLines && hasManyBulletPoints;
+
+    // If there's no toggle button but we should show one, let's reload the item via the panel refresh
+    if (!toggleButton && shouldShowToggle) {
+      // We'll force a reload by returning early
+      chrome.storage.local.get(["savedFeedback"], function (result) {
+        loadSavedFeedback();
+      });
+      return;
+    }
+
+    // Update collapsed content first line
+    if (shouldShowToggle) {
+      const firstLine = originalContent.split("\n")[0];
+      collapsedElement.textContent = `${firstLine}...`;
+    } else {
+      collapsedElement.textContent = originalContent;
+    }
+
+    // Proper restore display states
+    if (shouldShowToggle) {
+      // For entries with toggle, respect expansion state
+      if (contentElement.classList.contains("expanded")) {
+        contentElement.style.display = "block";
+        collapsedElement.style.display = "none";
+      } else {
+        contentElement.style.display = "none";
+        collapsedElement.style.display = "block";
+      }
+    } else {
+      // For entries without enough bullet points, always show the full content
       contentElement.style.display = "block";
       collapsedElement.style.display = "none";
-    } else {
-      contentElement.style.display = "none";
-      collapsedElement.style.display = "block";
     }
   }
 
