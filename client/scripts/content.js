@@ -118,7 +118,7 @@ function checkUserConsent() {
           <p>LeetMentor needs to send your code to our server for analysis.</p>
           <p>Your code will only be used to generate hints and improvements, and won't be stored permanently.</p>
           <p>Please confirm you consent to this data usage.</p>
-          <p><a href="https://leetmentor.vercel.app/privacy" target="_blank" style="color:#0066cc;text-decoration:underline;display:inline-flex;align-items:center;">View our privacy policy <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" style="margin-left:4px;"><path fill="#0066cc" d="M5 3c-1.093 0-2 .907-2 2v14c0 1.093.907 2 2 2h14c1.093 0 2-.907 2-2v-7h-2v7H5V5h7V3H5zm9 0v2h3.586l-9.293 9.293 1.414 1.414L19 6.414V10h2V3h-7z"/></svg></a></p>
+          <p><a href="https://leetcode-privacy-policy.vercel.app" target="_blank" style="color:#0066cc;text-decoration:underline;display:inline-flex;align-items:center;">View our privacy policy <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" style="margin-left:4px;"><path fill="#0066cc" d="M5 3c-1.093 0-2 .907-2 2v14c0 1.093.907 2 2 2h14c1.093 0 2-.907 2-2v-7h-2v7H5V5h7V3H5zm9 0v2h3.586l-9.293 9.293 1.414 1.414L19 6.414V10h2V3h-7z"/></svg></a></p>
           <div style="margin-top:20px;">
             <button id="consent-yes" style="margin-right:10px;padding:8px 16px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer;">I Consent</button>
             <button id="consent-no" style="padding:8px 16px;background:#f44336;color:white;border:none;border-radius:4px;cursor:pointer;">I Decline</button>
