@@ -95,6 +95,35 @@ function extractCode() {
 
 // =============== API FUNCTIONS ===============
 /**
+ * Check if user has consented to data collection
+ * @returns {Promise<boolean>} - Promise that resolves with consent status
+ */
+function checkUserConsent() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["dataConsentGiven"], function (result) {
+      if (result.dataConsentGiven) {
+        resolve(true);
+      } else {
+        // Show consent dialog
+        const consentConfirmed = confirm(
+          "LeetMentor needs to send your code to our server for analysis. " +
+            "Your code will only be used to generate hints and improvements, and won't be stored permanently. " +
+            "Please confirm you consent to this data usage (see our privacy policy for details)."
+        );
+
+        // Save consent preference
+        chrome.storage.local.set(
+          { dataConsentGiven: consentConfirmed },
+          function () {
+            resolve(consentConfirmed);
+          }
+        );
+      }
+    });
+  });
+}
+
+/**
  * Send extracted code to the remote server for hint generation
  * @param {string} code - The extracted code from the editor
  * @param {string} language - The programming language used
@@ -111,48 +140,55 @@ function sendToServerHint(code, language, problem_name) {
     );
   }
 
-  // Extract just the problem title from object if needed (not the full title with number)
-  const problemTitle =
-    typeof problem_name === "object" ? problem_name.title : problem_name;
+  // First check for user consent
+  return checkUserConsent().then((consentGiven) => {
+    if (!consentGiven) {
+      return Promise.reject(new Error("Data collection consent not given"));
+    }
 
-  console.log("Sending code:", code);
-  console.log("Language:", language);
-  console.log("Problem name:", problemTitle);
+    // Extract just the problem title from object if needed (not the full title with number)
+    const problemTitle =
+      typeof problem_name === "object" ? problem_name.title : problem_name;
 
-  return fetch("https://leetmentor.vercel.app/get_hint", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      user_code: code,
-      language: language,
-      problem_name: problemTitle,
-    }),
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        // Try to get detailed error message
-        const errorText = await response.text();
-        console.error("Error response:", response.status, errorText);
-        throw new Error(`Server error: ${response.status} - ${errorText}`);
-      }
-      return response.json();
+    console.log("Sending code:", code);
+    console.log("Language:", language);
+    console.log("Problem name:", problemTitle);
+
+    return fetch("https://leetmentor.vercel.app/get_hint", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_code: code,
+        language: language,
+        problem_name: problemTitle,
+      }),
     })
-    .then((data) => {
-      console.log("Success:", data);
+      .then(async (response) => {
+        if (!response.ok) {
+          // Try to get detailed error message
+          const errorText = await response.text();
+          console.error("Error response:", response.status, errorText);
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Success:", data);
 
-      // Save the hint response to storage
-      if (data && data.response && problem_name) {
-        saveFeedbackDraft(problem_name, data.response);
-      }
+        // Save the hint response to storage
+        if (data && data.response && problem_name) {
+          saveFeedbackDraft(problem_name, data.response);
+        }
 
-      return data;
-    })
-    .catch((error) => {
-      console.error("Error sending code to server:", error);
-      throw error; // Re-throw to propagate to the caller
-    });
+        return data;
+      })
+      .catch((error) => {
+        console.error("Error sending code to server:", error);
+        throw error; // Re-throw to propagate to the caller
+      });
+  });
 }
 
 /**
@@ -172,48 +208,55 @@ function sendToServerImprovement(code, language, problem_name) {
     );
   }
 
-  // Extract just the problem title from object if needed (not the full title with number)
-  const problemTitle =
-    typeof problem_name === "object" ? problem_name.title : problem_name;
+  // First check for user consent
+  return checkUserConsent().then((consentGiven) => {
+    if (!consentGiven) {
+      return Promise.reject(new Error("Data collection consent not given"));
+    }
 
-  console.log("Sending code:", code);
-  console.log("Language:", language);
-  console.log("Problem name:", problemTitle);
+    // Extract just the problem title from object if needed (not the full title with number)
+    const problemTitle =
+      typeof problem_name === "object" ? problem_name.title : problem_name;
 
-  return fetch("https://leetmentor.vercel.app/get_improvement", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      user_code: code,
-      language: language,
-      problem_name: problemTitle,
-    }),
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        // Try to get detailed error message
-        const errorText = await response.text();
-        console.error("Error response:", response.status, errorText);
-        throw new Error(`Server error: ${response.status} - ${errorText}`);
-      }
-      return response.json();
+    console.log("Sending code:", code);
+    console.log("Language:", language);
+    console.log("Problem name:", problemTitle);
+
+    return fetch("https://leetmentor.vercel.app/get_improvement", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_code: code,
+        language: language,
+        problem_name: problemTitle,
+      }),
     })
-    .then((data) => {
-      console.log("Success:", data);
+      .then(async (response) => {
+        if (!response.ok) {
+          // Try to get detailed error message
+          const errorText = await response.text();
+          console.error("Error response:", response.status, errorText);
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Success:", data);
 
-      // Save the improvement response to storage
-      if (data && data.response && problem_name) {
-        saveFeedbackDraft(problem_name, data.response);
-      }
+        // Save the improvement response to storage
+        if (data && data.response && problem_name) {
+          saveFeedbackDraft(problem_name, data.response);
+        }
 
-      return data;
-    })
-    .catch((error) => {
-      console.error("Error sending code to server:", error);
-      throw error; // Re-throw to propagate to the caller
-    });
+        return data;
+      })
+      .catch((error) => {
+        console.error("Error sending code to server:", error);
+        throw error; // Re-throw to propagate to the caller
+      });
+  });
 }
 
 /**
