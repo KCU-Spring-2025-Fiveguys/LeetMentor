@@ -31,11 +31,6 @@ ENV/
 *.swp
 *.swo
 
-# Vercel
-.vercel
-
-# Frontend
-/LeetMentor
 
 #os files
 .DS_Store

@@ -1,5 +1,6 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 import os
 from dotenv import load_dotenv
 import json
@@ -13,7 +14,7 @@ if not firebase_admin._apps:
 db = firestore.client()
     
 def get_problem_by_name(name):
-    problem_ref = db.collection('problems').where('name', '==', name).get()
+    problem_ref = db.collection('problems').where(filter=FieldFilter("name", "==", name)).get()
     if problem_ref:
         problem = problem_ref[0].to_dict()
         instruction = problem.get('instruction', '')
