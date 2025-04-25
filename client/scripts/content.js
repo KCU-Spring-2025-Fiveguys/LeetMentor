@@ -100,16 +100,53 @@ function extractCode() {
  */
 function checkUserConsent() {
   return new Promise((resolve) => {
-    chrome.storage.local.get(["dataConsentGiven"], function (result) {
+    chrome.storage.local.get(["dataConsentGiven"], async function (result) {
       if (result.dataConsentGiven) {
         resolve(true);
       } else {
         // Show consent dialog
-        const consentConfirmed = confirm(
-          "LeetMentor needs to send your code to our server for analysis. " +
-            "Your code will only be used to generate hints and improvements, and won't be stored permanently. " +
-            "Please confirm you consent to this data usage (see our privacy policy for details)."
-        );
+        const modal = document.createElement("div");
+        modal.style.cssText =
+          "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;display:flex;justify-content:center;align-items:center;";
+
+        const modalContent = document.createElement("div");
+        modalContent.style.cssText =
+          "background:white;padding:20px;border-radius:5px;max-width:500px;text-align:center;";
+
+        modalContent.innerHTML = `
+          <h3 style="margin-top:0;">Data Usage Consent</h3>
+          <p>LeetMentor needs to send your code to our server for analysis.</p>
+          <p>Your code will only be used to generate hints and improvements, and won't be stored permanently.</p>
+          <p>Please confirm you consent to this data usage.</p>
+          <p><a href="https://leetmentor.vercel.app/privacy" target="_blank" style="color:#0066cc;text-decoration:underline;display:inline-flex;align-items:center;">View our privacy policy <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" style="margin-left:4px;"><path fill="#0066cc" d="M5 3c-1.093 0-2 .907-2 2v14c0 1.093.907 2 2 2h14c1.093 0 2-.907 2-2v-7h-2v7H5V5h7V3H5zm9 0v2h3.586l-9.293 9.293 1.414 1.414L19 6.414V10h2V3h-7z"/></svg></a></p>
+          <div style="margin-top:20px;">
+            <button id="consent-yes" style="margin-right:10px;padding:8px 16px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer;">I Consent</button>
+            <button id="consent-no" style="padding:8px 16px;background:#f44336;color:white;border:none;border-radius:4px;cursor:pointer;">I Decline</button>
+          </div>
+        `;
+
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Use a promise to handle the user's response
+        const consentPromise = new Promise((resolve) => {
+          document
+            .getElementById("consent-yes")
+            .addEventListener("click", () => {
+              document.body.removeChild(modal);
+              resolve(true);
+            });
+
+          document
+            .getElementById("consent-no")
+            .addEventListener("click", () => {
+              document.body.removeChild(modal);
+              resolve(false);
+            });
+        });
+
+        // Wait for the user's response
+        const consentConfirmed = await consentPromise;
 
         // Save consent preference
         chrome.storage.local.set(
